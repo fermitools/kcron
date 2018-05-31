@@ -1,0 +1,148 @@
+%define _hardened_build 1
+
+%bcond_without libcap
+%bcond_without systemtap
+%bcond_without sanatize
+
+%bcond_with seccomp
+%bcond_with staticsanitize
+
+%define kcron_keytab_dir /var/adm/krb5
+%define client_keytab_dir /var/kerberos/krb5/user
+
+Name:		fermilab-util_kcron
+
+Version:	1.0
+Release:	1%{?dist}
+Summary:	A utility for getting Kerberos credentials in scheduled jobs
+
+Group:		Fermilab
+License:	MIT
+URL:		https://servicedesk.fnal.gov
+Source0:	kcron-%{version}.tar.gz
+
+Provides:	kcron
+Provides:	fermilab-util_kcron
+
+%if %{_hardened_build}
+BuildRequires: checksec
+%endif
+
+%if %{with libcap}
+BuildRequires:  libcap libcap-devel
+%endif
+%if %{with systemtap}
+BuildRequires:  systemtap-sdt-devel
+%endif
+%if %{with seccomp}
+BuildRequires:  libseccomp-devel
+%endif
+%if %{with sanatize}
+BuildRequires:	libubsan libasan
+%if %{with staticsanitize}
+BuildRequires:	libubsan-static libasan-static
+%endif
+%endif
+
+BuildRequires:	cmake3 asciidoc redhat-rpm-config coreutils bash gcc
+
+Requires:       krb5-workstation krb5-libs
+Requires:       util-linux policycoreutils
+Requires(pre):  policycoreutils
+Requires(post): policycoreutils
+
+
+%description
+The kcron utility has a long history at Fermilab.  It is useful
+for running automatic jobs with kerberos rights.
+
+
+%prep
+%setup -q -n kcron
+
+
+%build
+%cmake3 -Wdev \
+%if %{with sanatize}
+ -DUSE_SANITIZE=ON \
+%if %{with staticsanitize}
+ -DUSE_SANITIZE_AS_STATIC=ON \
+%else
+ -DUSE_SANITIZE_AS_STATIC=OFF \
+%endif
+%else
+ -DUSE_SANITIZE=OFF \
+ -DUSE_SANITIZE_AS_STATIC=OFF \
+%endif
+%if %{with libcap}
+ -DUSE_CAPABILITIES=ON \
+%else
+ -DUSE_CAPABILITIES=OFF \
+%endif
+%if %{with systemtap}
+ -DUSE_SYSTEMTAP=ON \
+%else
+ -DUSE_SYSTEMTAP=OFF \
+%endif
+ -Wdeprecated 
+
+make VERBOSE=2 %{?_smp_mflags}
+
+
+%install
+make install DESTDIR=%{buildroot}
+%{__mkdir_p} %{buildroot}/%{kcron_keytab_dir}
+
+
+%clean
+rm -rf %{buildroot}
+
+%check
+for code in $(ls %{buildroot}%{_bindir}); do
+    bash -n %{buildroot}%{_bindir}/${code}
+    if [[ $? -ne 0 ]]; then
+      exit 1
+    fi
+done
+bash -n %{buildroot}%{_sysconfdir}/sysconfig/kcron
+if [[ $? -ne 0 ]]; then
+  exit 1
+fi
+
+%if %{_hardened_build}
+for code in $(ls %{buildroot}%{_libexecdir}/kcron); do
+    checksec -f %{buildroot}%{_libexecdir}/kcron/${code}
+    checksec -ff %{buildroot}%{_libexecdir}/kcron/${code}
+    if [[ $? -ne 0 ]]; then
+      exit 1
+    fi
+done
+%endif
+
+%pre -p /bin/bash
+semanage fcontext -a -t user_cron_spool_t '%{kcron_keytab_dir}(/.*)?' >/dev/null 2>&1
+exit 0
+
+%post -p /bin/bash
+%{__mkdir_p} %{client_keytab_dir}
+restorecon -RF %{client_keytab_dir} %{kcron_keytab_dir}
+
+
+%files
+%defattr(0644,root,root,0755)
+%doc %{_mandir}/man1/*
+%attr(0755,root,root) %{_bindir}/*
+%config(noreplace) %{_sysconfdir}/sysconfig/kcron
+%dir %attr(1711,root,users) %{kcron_keytab_dir}
+
+%if %{with libcap}
+%attr(0711,root,root) %caps(cap_chown=p cap_fowner=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
+%attr(0711,root,root) %caps(cap_fowner=p cap_dac_override=p) %{_libexecdir}/kcron/remove-kcron-keytab
+%else
+%attr(4711,root,root) %{_libexecdir}/kcron/init-kcron-keytab
+%attr(4711,root,root) %{_libexecdir}/kcron/remove-kcron-keytab
+%endif
+
+
+%changelog
+

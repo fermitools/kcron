@@ -1,0 +1,12 @@
+---
+BasedOnStyle:  LLVM
+AlignTrailingComments:	true
+AllowShortIfStatementsOnASingleLine:	false
+AllowShortLoopsOnASingleLine:	false
+BreakBeforeBraces:	Attach
+ColumnLimit:     160
+Cpp11BracedListStyle: true
+Standard:        Cpp11
+UseTab:          Never
+...
+

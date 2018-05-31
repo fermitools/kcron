@@ -1,0 +1,90 @@
+= kcron(1)
+
+== NAME
+kcron, kcroninit, kcrondestroy - Utilities getting Kerberos in scheduled jobs
+
+== SYNOPSIS
+
+*kcron* authenticate a non-interactive process 
+
+*kcroninit* creates a cron principal and extracts into a keytab to be used by kcron(1)
+
+*kcrondestroy* destroys keytab and deletes cron principal created by kcroninit(1)
+
+== DESCRIPTION
+
+The *kcron* utility obtains Kerberos credentials for a process using a keytab previously created by kcroninit(1).  The principal used in that keytab is of the form +username/cron/host.domain@REALM+.
+
+The *kcroninit* utility creates a new principal of the form +username/cron/host.domain@REALM+ and then creates a keytab file that can be used by the kcron(1) utility for authentication. The kcroninit(1) utility must be run under account +username+ and will prompt to authenticate as +username@REALM+.
+
+The *kcrondestroy* utility destroys the kerberos principal of the form +username/cron/host.domain@REALM+ (created previously via the kcroninit(1) utility) and then removes keytab file that was used by kcron(1) for authentication.
+
+=== kcron
+
+If no command-line arguments are present, kcron exits after running kinit(1).  Otherwise, the arguments are concatenated with space characters between them to form a command which is given to a shell, then kdestroy(1) is executed.
+       
+       kcron scp examplefile host.example.com:~/
+
+=== kcroninit
+
+Accepts no arguments
+
+	kcroninit
+
+=== kcrondestroy
+
+Accepts no arguments
+
+	kcrondestroy
+
+== LIMITATIONS
+
+ifdef::libcap[]
+The kcron helper utilities utilize filesystem CAPABILITIES(7) stored as XATTR(7) values on the binaries.  The application will not run as expected if your system does not support them.
+
+On modern Linux systems, these are enabled by default.
+
+NFS does not support CAPABILITIES(7).  However, if you set this SUID, it will continue to work as expected.
+
+You can review them with GETCAP(8) on /usr/libexec/kcron/*
+endif::libcap[]
+
+The kcron helper utilities assume basic kerberos utilities are installed and configured on the system:
+KRB5.CONF(5)
+KINIT(1)
+KDESTROY(1)
+KADMIN(1)
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (usage error; configuration error; unexpected error).
+
+*2*::
+  Failure (missing utilities; insufficient permissions) 
+
+== NOTE
+
+Recent versions of kerberos are able to automatically kinit against 
+
++/var/kerberos/krb5/user/${EUID}/client.keytab+
+
+By default this behavior uses the first principle found within the keytab (KTUTIL(1) slot 1).
+
+See also: https://github.com/heimdal/heimdal/issues/383
+
+== LICENCE
+
+Copyright 2017 Fermi Research Alliance, LLC
+
+This software was produced under U.S. Government contract DE-AC02-07CH11359 for Fermi National Accelerator Laboratory (Fermilab), which is operated by Fermi Research Alliance, LLC for the U.S. Department of Energy. The U.S. Government has rights to use, reproduce, and distribute this software.  NEITHER THE GOVERNMENT NOR FERMI RESEARCH ALLIANCE, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is modified to produce derivative works, such modified software should be clearly marked, so as not to confuse it with the version available from Fermilab.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR FERMI RESEARCH ALLIANCE, LLC BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
