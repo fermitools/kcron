@@ -51,9 +51,10 @@
 #include <string.h>       /* for basename, memset                 */
 #include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc        */
 #include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE           */
-#include <sys/resource.h> /* for rlimit, RLIMIT_                  */
 #include <sys/types.h>    /* for uid_t, cap_t, etc                */
 #include <unistd.h>       /* for chown, gethostname, getuid, etc  */
+
+#include "kcron_ulimit.h" /* for set_ulimits                      */
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
@@ -330,12 +331,6 @@ int chmod_keytab(char *keytab) {
 int main(void) {
 
   struct stat st = {0};
-  const struct rlimit proc_lim = {0, 0};
-  const struct rlimit memlock_lim = {0, 0};
-  const struct rlimit memq_lim = {0, 0};
-  const struct rlimit stack_lim = {1024, 2048};
-  const struct rlimit filesize_lim = {1024, 2048};
-  const struct rlimit fileopen_files = {8, 10};
   char keytab[FILE_PATH_MAX_LENGTH + 1];
   memset(keytab, '\0', sizeof(keytab));
 
@@ -344,33 +339,8 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  if (unlikely(setrlimit(RLIMIT_NPROC, &proc_lim) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot disable forking.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(setrlimit(RLIMIT_MEMLOCK, &memlock_lim) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot disable memory locking.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(setrlimit(RLIMIT_MSGQUEUE, &memq_lim) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot disable memory queue.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(setrlimit(RLIMIT_STACK, &stack_lim) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot lower stack size.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(setrlimit(RLIMIT_FSIZE, &filesize_lim) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot lower max file size.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(setrlimit(RLIMIT_NOFILE, &fileopen_files) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot lower max open files.\n", __PROGRAM_NAME);
+  if (unlikely(set_ulimits()) != 0) {
+    (void)fprintf(stderr, "%s: Cannot set ulimits.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
