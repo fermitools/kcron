@@ -54,104 +54,13 @@
 #include <sys/types.h>    /* for uid_t, cap_t, etc             */
 #include <unistd.h>       /* for gethostname, getuid, etc      */
 
-#include "kcron_ulimit.h" /* for set_ulimits                      */
+#include "kcron_ulimit.h" /* for set_ulimits                               */
+#include "kcron_caps.h"   /* for disable_capabilities, enable_capabilities */
 
 #if USE_CAPABILITIES == 1
-inline int disable_capabilities(void) __attribute__((warn_unused_result));
-inline int disable_capabilities(void) {
-  cap_t capabilities;
-
-  uid_t euid;
-  euid = geteuid();
-  if (unlikely(euid == 0)) {
-    DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 2);
-    /* pointless for euid 0 */
-    return 0;
-  }
-
-  capabilities = cap_get_proc();
-
-  if (unlikely(cap_clear(capabilities))) {
-    /* error */
-    DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 1);
-    (void)cap_free(capabilities);
-    (void)fprintf(stderr, "%s: Unable to clear CAPABILITIES\n", __PROGRAM_NAME);
-    return 1;
-  }
-
-  DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 0);
-  (void)cap_free(capabilities);
-  return 0;
-}
-
-inline int enable_capabilities(void) __attribute__((warn_unused_result));
-inline int enable_capabilities(void) {
-  cap_t capabilities;
-  int clear_cap = 0;
-
-  cap_value_t expected_cap[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
-  int num_caps = sizeof(expected_cap) / sizeof(expected_cap[0]);
-
-  uid_t euid = geteuid();
-  if (unlikely(euid == 0)) {
-    /* pointless for euid 0 */
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 2);
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 2);
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 2);
-    return 0;
-  }
-
-  capabilities = cap_get_proc();
-
-  /* clear any active capabilities */
-  clear_cap = disable_capabilities();
-  if (unlikely(clear_cap != 0)) {
-    (void)cap_free(capabilities);
-    return clear_cap;
-  }
-
-  if (unlikely(cap_set_flag(capabilities, CAP_PERMITTED, num_caps, expected_cap, CAP_SET) == -1)) {
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 1);
-    (void)cap_free(capabilities);
-    /* error */
-    (void)fprintf(stderr, "%s: Unable to set CAPABILITIES PERMITTED\n", __PROGRAM_NAME);
-    return 1;
-  }
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 0);
-
-  if (unlikely(cap_set_flag(capabilities, CAP_EFFECTIVE, num_caps, expected_cap, CAP_SET) == -1)) {
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 1);
-    (void)cap_free(capabilities);
-    /* error */
-    (void)fprintf(stderr, "%s: Unable to set CAPABILITIES EFFECTIVE\n", __PROGRAM_NAME);
-    return 1;
-  }
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 0);
-
-  if (unlikely(cap_set_proc(capabilities) == -1)) {
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 1);
-    (void)cap_free(capabilities);
-    /* error */
-    (void)fprintf(stderr, "%s: Unable to activate CAPABILITIES\n", __PROGRAM_NAME);
-    return 1;
-  }
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 0);
-
-  (void)cap_free(capabilities);
-  return 0;
-}
+const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
 #else
-/* If not caps, just return 0 */
-inline int disable_capabilities(void) {
-  DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 2);
-  return 0;
-}
-inline int enable_capabilities(void) {
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 2);
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 2);
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 2);
-  return 0;
-}
+const cap_value_t caps[] = {};
 #endif
 
 int get_filename(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
@@ -228,7 +137,8 @@ int main(void) {
     return EXIT_SUCCESS;
   } else {
 
-    if (unlikely(enable_capabilities() != 0)) {
+    if (unlikely(enable_capabilities(caps) != 0)) {
+      (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
       return EXIT_FAILURE;
     }
 

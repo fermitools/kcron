@@ -189,8 +189,8 @@ string (REPLACE ";" " " CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 # Build config file
 configure_file ("src/C/autoconf.h.in" "src/C/autoconf.h" @ONLY)
 
-add_executable(init-kcron-keytab src/C/init-kcron-keytab.c src/C/kcron_ulimit.c)
-add_executable(remove-kcron-keytab src/C/remove-kcron-keytab.c src/C/kcron_ulimit.c)
+add_executable(init-kcron-keytab src/C/init-kcron-keytab.c src/C/kcron_caps.c src/C/kcron_ulimit.c)
+add_executable(remove-kcron-keytab src/C/remove-kcron-keytab.c src/C/kcron_caps.c src/C/kcron_ulimit.c)
 
 install(TARGETS init-kcron-keytab remove-kcron-keytab DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron)
 

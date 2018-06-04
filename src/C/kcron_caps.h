@@ -32,39 +32,12 @@
 
 */
 
-#cmakedefine VERSION "@VERSION@"
+#if USE_CAPABILITIES == 1
+#include <sys/capability.h> /* for cap_value_t */
 
-#cmakedefine USE_CAPABILITIES @HAVE_CAPABILITIES_H@
-#cmakedefine USE_SYSTEMTAP @HAVE_SDT_H@
-#cmakedefine USE_SECCOMP @HAVE_SECCOMP_H@
-
-#define _USER_GID @USER_GID@
-
-#define __KCRON_KEYTAB_DIR "@KCRON_KEYTAB_DIR@"
-#define __CLIENT_KEYTAB "@CLIENT_KEYTAB@"
-
-#define HOSTNAME_MAX_LENGTH @HOSTNAME_MAX_LENGTH@
-#define USERNAME_MAX_LENGTH @USERNAME_MAX_LENGTH@
-#define FILE_PATH_MAX_LENGTH @FILE_PATH_MAX_LENGTH@
-
-#define _POSIX_C_SOURCE 200112L
-
-#define _GNU_SOURCE 0
-
-
-#if USE_SYSTEMTAP == 1
-#include <sys/sdt.h> /* for DTRACE_PROBEs */
+inline int disable_capabilities(void) __attribute__((warn_unused_result));
+inline int enable_capabilities(const cap_value_t expected_cap[]) __attribute__((warn_unused_result));
 #else
-#ifndef
-#define DTRACE_PROBE1(a, b, c)
-#define DTRACE_PROBE2(a, b, c, d)
+inline int disable_capabilities(void) __attribute__((pure)) __attribute__ ((warn_unused_result));
+inline int enable_capabilities(const cap_value_t expected_cap[]) __attribute__((pure)) __attribute__ ((warn_unused_result));
 #endif
-#endif
-
-#if USE_SECCOMP == 1
-#include <linux/seccomp.h> /* for PR_SET_SECCOMP, SECCOMP_MODE_STRICT */
-#endif
-
-/* GCC optimization macros */
-#define unlikely(expr) __builtin_expect(!!(expr), 0)
-#define likely(expr) __builtin_expect(!!(expr), 1)
