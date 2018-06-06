@@ -59,9 +59,11 @@ for running automatic jobs with kerberos rights.
 
 %prep
 %setup -q -n kcron
+mkdir build
 
 
 %build
+cd build
 %cmake3 -Wdev \
 %if %{with sanatize}
  -DUSE_SANITIZE=ON \
