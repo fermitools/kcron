@@ -63,8 +63,8 @@ const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
 const cap_value_t caps[] = {};
 #endif
 
-int get_filename(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int get_filename(char *keytab) {
+int get_filename(char restrict *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
+int get_filename(char restrict *keytab) {
 
   uid_t uid;
   struct passwd *pd;

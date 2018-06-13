@@ -76,8 +76,8 @@ const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_FOWNER};
 const cap_value_t caps[] = {};
 #endif
 
-int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
+int mkdir_p(char restrict *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull)) __attribute__((warn_unused_result));
+int mkdir_p(char restrict *dir, uid_t owner, gid_t group, mode_t mode) {
 
   struct stat st = {0};
 
@@ -152,8 +152,8 @@ int make_client_keytab_dir(void) {
   return 0;
 }
 
-int get_filename(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int get_filename(char *keytab) {
+int get_filename(char restrict *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
+int get_filename(char restrict *keytab) {
   uid_t uid;
   struct passwd *pd;
   char username[USERNAME_MAX_LENGTH + 1];
@@ -182,8 +182,8 @@ int get_filename(char *keytab) {
   return 0;
 }
 
-int write_empty_keytab(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int write_empty_keytab(char *keytab) {
+int write_empty_keytab(char restrict *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
+int write_empty_keytab(char restrict *keytab) {
 
   /* This magic string makes ktutil and kadmin happy with an empty file */
   char emptykeytab_a = 0x05;
@@ -210,8 +210,8 @@ int write_empty_keytab(char *keytab) {
   return fclose(fp);
 }
 
-int chmod_keytab(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int chmod_keytab(char *keytab) {
+int chmod_keytab(char restrict *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
+int chmod_keytab(char restrict *keytab) {
 
   uid_t uid;
   uid = getuid();
