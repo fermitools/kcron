@@ -40,12 +40,12 @@ destroy() {
 #    usage
 #fi
 ###########################################################
-#        Opions
+#        Options
 ###########################################################
-# When cron principal keytab is created for shared accounts 
-# which do not have a Kerberos principal, admin principal will be 
-# cron principal itself. It is assumed that Service Desk already
-# created the principal and only keytab is needed.
+# When a cron principal keytab is created for shared accounts 
+# which do not have a Kerberos principal, the admin principal will be 
+# the cron principal itself. It is assumed that the Service Desk already
+# created the principal and only the keytab is needed.
 # Reglar users are able to use their Kerberos principals to create cron principals.
 
 ADMPRINCIPAL=${WHOAMI}
