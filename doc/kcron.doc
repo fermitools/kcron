@@ -68,6 +68,8 @@ KADMIN(1)
 
 == NOTE
 
+The use of this utility requires changes to KDC configuration. Kerberos admins should review the README file for the details. 
+
 Recent versions of kerberos are able to automatically kinit against 
 
 +/var/kerberos/krb5/user/${EUID}/client.keytab+
