@@ -50,6 +50,7 @@
 #include <string.h>       /* for basename, memset              */
 #include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc     */
 #include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
+#include <sys/ptrace.h>   /* for ptrace                        */
 #include <sys/resource.h> /* for rlimit, RLIMIT_               */
 #include <sys/types.h>    /* for uid_t, cap_t, etc             */
 #include <unistd.h>       /* for gethostname, getuid, etc      */
@@ -99,6 +100,11 @@ int main(void) {
   struct stat st = {0};
   char keytab[FILE_PATH_MAX_LENGTH + 1];
   memset(keytab, '\0', sizeof(keytab));
+
+  if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1) {
+    (void)fprintf(stderr, "%s: Do not trace me.\n", __PROGRAM_NAME);
+    return EXIT_FAILURE;
+  }
 
   if (unlikely(prctl(PR_SET_DUMPABLE, 0) != 0)) {
     (void)fprintf(stderr, "%s: Cannot disable core dumps.\n", __PROGRAM_NAME);
