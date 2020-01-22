@@ -86,7 +86,7 @@ cd build
 %else
  -DUSE_SYSTEMTAP=OFF \
 %endif
- -Wdeprecated 
+ -Wdeprecated ..
 
 make VERBOSE=2 %{?_smp_mflags}
 
