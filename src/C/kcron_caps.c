@@ -74,7 +74,7 @@ inline int disable_capabilities(void) {
 inline int enable_capabilities(const cap_value_t expected_cap[]) {
   cap_t capabilities;
 
-  int num_caps = sizeof(expected_cap) / sizeof(expected_cap[0]);
+  int num_caps = sizeof(*expected_cap) / sizeof((expected_cap)[0]);
 
   uid_t euid = geteuid();
   if (unlikely(euid == 0)) {
