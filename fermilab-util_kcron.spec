@@ -86,6 +86,8 @@ cd build
 %else
  -DUSE_SYSTEMTAP=OFF \
 %endif
+ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+ -DCMAKE_RULE_MESSAGES:BOOL=ON \
  -Wdeprecated ..
 
 make VERBOSE=2 %{?_smp_mflags}
