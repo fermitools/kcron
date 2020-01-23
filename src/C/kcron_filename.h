@@ -1,4 +1,10 @@
 /*
+ *
+ * A simple place where we keep our SETRLIMIT(2) calls
+ *
+ */
+#include "autoconf.h" /* for our automatic config bits        */
+/*
 
    Copyright 2017 Fermi Research Alliance, LLC
 
@@ -32,4 +38,40 @@
 
 */
 
-int set_ulimits(void) __attribute__((warn_unused_result));
+#include <libgen.h>       /* for basename, dirname                */
+#include <pwd.h>          /* for getpwuid, passwd                 */
+#include <stdio.h>        /* for fprintf, snprintf                */
+#include <string.h>       /* for memset                           */
+#include <unistd.h>       /* for gethostname, getuid              */
+
+
+int get_filename(char *keytab) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int get_filename(char *keytab) {
+  uid_t uid;
+  struct passwd *pd;
+  char username[USERNAME_MAX_LENGTH + 1];
+  char hostname[HOSTNAME_MAX_LENGTH + 1];
+
+  (void)memset(username, '\0', sizeof(username));
+  (void)memset(hostname, '\0', sizeof(hostname));
+
+  /* What is this system called? */
+  if (gethostname(hostname, HOSTNAME_MAX_LENGTH) != 0) {
+    (void)fprintf(stderr, "%s: gethostname() error.\n", __PROGRAM_NAME);
+    return 1;
+  }
+
+  /* What is my UID (not effective UID), ie whoami when I'm not root */
+  uid = getuid();
+  if ((pd = getpwuid(uid)) == NULL) {
+    (void)fprintf(stderr, "%s: getpwuid() error for %d.\n", __PROGRAM_NAME, uid);
+    return 1;
+  }
+  (void)snprintf(username, sizeof(username), "%s", basename(pd->pw_name));
+
+  /* Where do the keytabs go?  Here of course */
+  (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s.cron.%s.keytab", __KCRON_KEYTAB_DIR, username, basename(hostname));
+
+  return 0;
+}
+

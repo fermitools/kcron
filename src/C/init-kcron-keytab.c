@@ -44,19 +44,20 @@
 #define __PROGRAM_NAME "init-kcron-keytab"
 #endif
 
-#include <libgen.h>       /* for dirname                          */
+#include <libgen.h>       /* for basename, dirname                */
 #include <pwd.h>          /* for getpwuid, passwd                 */
 #include <stdio.h>        /* for fprintf, fwrite, stderr, etc     */
 #include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE       */
-#include <string.h>       /* for basename, memset                 */
+#include <string.h>       /* for memset                           */
 #include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc        */
 #include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE           */
 #include <sys/ptrace.h>   /* for ptrace                           */
 #include <sys/types.h>    /* for uid_t, cap_t, etc                */
 #include <unistd.h>       /* for chown, gethostname, getuid, etc  */
 
-#include "kcron_ulimit.h" /* for set_ulimits                               */
-#include "kcron_caps.h"   /* for disable_capabilities, enable_capabilities */
+#include "kcron_caps.h"       /* for disable_capabilities, enable_capabilities */
+#include "kcron_filename.h"   /* for get_filename                              */
+#include "kcron_setup.h"      /* for the hardening constructor                 */
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
@@ -86,44 +87,48 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
   gid_t safe_group = 0;
   mode_t safe_mode = _0711;
 
-  char path_str[FILE_PATH_MAX_LENGTH + 1];
-  memset(path_str, '\0', sizeof(path_str));
+  char *nullpointer = NULL;
 
-  if (unlikely(dir == NULL)) {
-    /* nothing to do no dir passed */
+  char path_str[FILE_PATH_MAX_LENGTH + 1];
+  (void)memset(path_str, '\0', sizeof(path_str));
+
+  if (dir == nullpointer) {
+    /* nothing to do - no dir passed */
     return 0;
-  } else if (unlikely(stat(dir, &st) == 0)) {
-    /* nothing to do */
+  }
+
+  if (stat(dir, &st) == 0) {
+    /* nothing to do - dir exists*/
     return 0;
   }
 
   (void)snprintf(path_str, sizeof(path_str), "%s", dir);
 
   /* recursive, safer user/group/modes */
-  if (unlikely(mkdir_p(dirname(path_str), safe_owner, safe_group, safe_mode) != 0)) {
+  if (mkdir_p(dirname(path_str), safe_owner, safe_group, safe_mode) != 0) {
     /* If it breaks abort recursion */
     return 1;
   }
 
-  if (unlikely(enable_capabilities(caps) != 0)) {
+  if (enable_capabilities(caps) != 0) {
     (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(mkdir(dir, mode) != 0)) {
+  if (mkdir(dir, mode) != 0) {
     (void)fprintf(stderr, "%s: unable to mkdir %s\n", __PROGRAM_NAME, dir);
     return 1;
   }
-  if (unlikely(chown(dir, owner, group) != 0)) {
+  if (chown(dir, owner, group) != 0) {
     (void)fprintf(stderr, "%s: unable to chown %i:%i %s\n", __PROGRAM_NAME, owner, group, dir);
     return 1;
   }
-  if (unlikely(chmod(dir, mode) != 0)) {
+  if (chmod(dir, mode) != 0) {
     (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, mode, dir);
     return 1;
   }
 
-  if (unlikely(disable_capabilities() != 0)) {
+  if (disable_capabilities() != 0) {
     return 1;
   }
 
@@ -137,8 +142,8 @@ int make_client_keytab_dir(void) {
   char user_keytab_dir[FILE_PATH_MAX_LENGTH + 1];
   char uid_str[USERNAME_MAX_LENGTH + 1];
 
-  memset(uid_str, '\0', sizeof(uid_str));
-  memset(user_keytab_dir, '\0', sizeof(user_keytab_dir));
+  (void)memset(user_keytab_dir, '\0', sizeof(user_keytab_dir));
+  (void)memset(uid_str, '\0', sizeof(uid_str));
 
   uid = getuid();
 
@@ -146,39 +151,9 @@ int make_client_keytab_dir(void) {
 
   (void)snprintf(user_keytab_dir, sizeof(user_keytab_dir), "%s/%s", __CLIENT_KEYTAB, uid_str);
 
-  if (unlikely(mkdir_p(user_keytab_dir, uid, _USER_GID, _0700) != 0)) {
+  if (mkdir_p(user_keytab_dir, uid, _USER_GID, _0700) != 0) {
     return 1;
   }
-
-  return 0;
-}
-
-int get_filename(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int get_filename(char *keytab) {
-  uid_t uid;
-  struct passwd *pd;
-  char username[USERNAME_MAX_LENGTH + 1];
-  char hostname[HOSTNAME_MAX_LENGTH + 1];
-
-  memset(username, '\0', sizeof(username));
-  memset(hostname, '\0', sizeof(hostname));
-
-  /* What is this system called? */
-  if (unlikely(gethostname(hostname, HOSTNAME_MAX_LENGTH) != 0)) {
-    (void)fprintf(stderr, "%s: gethostname() error.\n", __PROGRAM_NAME);
-    return 1;
-  }
-
-  /* What is my UID (not effective UID), ie whoami when I'm not root */
-  uid = getuid();
-  if ((pd = getpwuid(uid)) == NULL) {
-    (void)fprintf(stderr, "%s: getpwuid() error for %d.\n", __PROGRAM_NAME, uid);
-    return 1;
-  }
-  (void)snprintf(username, sizeof(username), "%s", basename(pd->pw_name));
-
-  /* Where do the keytabs go?  Here of course */
-  (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s.cron.%s.keytab", __KCRON_KEYTAB_DIR, username, basename(hostname));
 
   return 0;
 }
@@ -191,7 +166,7 @@ int write_empty_keytab(char *keytab) {
   char emptykeytab_b = 0x02;
 
   FILE *fp;
-  if (unlikely(enable_capabilities(caps) != 0)) {
+  if (enable_capabilities(caps) != 0) {
     (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
@@ -201,7 +176,7 @@ int write_empty_keytab(char *keytab) {
     return 1;
   }
 
-  if (unlikely(disable_capabilities() != 0)) {
+  if (disable_capabilities() != 0) {
     fclose(fp);
     return 1;
   }
@@ -219,22 +194,22 @@ int chmod_keytab(char *keytab) {
 
   /* ensure permissions are as expected on keytab file */
 
-  if (unlikely(enable_capabilities(caps) != 0)) {
+  if (enable_capabilities(caps) != 0) {
     (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(chown(keytab, uid, _USER_GID) != 0)) {
+  if (chown(keytab, uid, _USER_GID) != 0) {
     (void)fprintf(stderr, "%s: unable to chown %d:%d %s\n", __PROGRAM_NAME, uid, _USER_GID, keytab);
     return 1;
   }
 
-  if (unlikely(chmod(keytab, _0600) != 0)) {
+  if (chmod(keytab, _0600) != 0) {
     (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, _0600, keytab);
     return 1;
   }
 
-  if (unlikely(disable_capabilities() != 0)) {
+  if (disable_capabilities() != 0) {
     return 1;
   }
 
@@ -243,60 +218,36 @@ int chmod_keytab(char *keytab) {
 
 int main(void) {
 
+  harden_runtime();
+
   struct stat st = {0};
   char keytab[FILE_PATH_MAX_LENGTH + 1];
-  memset(keytab, '\0', sizeof(keytab));
 
-  if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1) {
-    (void)fprintf(stderr, "%s: Do not trace me.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
+  (void)memset(keytab, '\0', sizeof(keytab));
 
-  if (unlikely(prctl(PR_SET_DUMPABLE, 0) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot disable core dumps.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(set_ulimits()) != 0) {
-    (void)fprintf(stderr, "%s: Cannot set ulimits.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-#if USE_SECCOMP == 1
-  if (unlikely(prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot drop useless syscalls.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-#endif
-
-  if (unlikely(disable_capabilities() != 0)) {
-    (void)fprintf(stderr, "%s: Cannot drop extra permissions.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(make_client_keytab_dir() != 0)) {
+  if (make_client_keytab_dir() != 0) {
     (void)fprintf(stderr, "%s: Cannot setup containing KRB5 EUID directory.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
-  if (unlikely(mkdir_p(__KCRON_KEYTAB_DIR, 0, _USER_GID, _1711) != 0)) {
+  if (mkdir_p(__KCRON_KEYTAB_DIR, 0, _USER_GID, _1711) != 0) {
     (void)fprintf(stderr, "%s: Cannot setup containing directory.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
-  if (unlikely(get_filename(keytab) != 0)) {
+  if (get_filename(keytab) != 0) {
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
   /* If keytab is missing make it */
-  if (likely(stat(keytab, &st) == -1)) {
-    if (unlikely(write_empty_keytab(keytab) != 0)) {
+  if (stat(keytab, &st) == -1) {
+    if (write_empty_keytab(keytab) != 0) {
       (void)fprintf(stderr, "%s: Cannot create keytab : %s.\n", __PROGRAM_NAME, keytab);
       return EXIT_FAILURE;
     }
   }
 
-  if (unlikely(chmod_keytab(keytab) != 0)) {
+  if (chmod_keytab(keytab) != 0) {
     (void)fprintf(stderr, "%s: Cannot set permissions on keytab : %s.\n", __PROGRAM_NAME, keytab);
     return EXIT_FAILURE;
   }
