@@ -37,12 +37,6 @@ BuildRequires:  systemtap-sdt-devel
 %if %{with seccomp}
 BuildRequires:  libseccomp-devel
 %endif
-%if %{with sanatize}
-BuildRequires:	libubsan libasan
-%if %{with staticsanitize}
-BuildRequires:	libubsan-static libasan-static
-%endif
-%endif
 
 BuildRequires:	cmake3 asciidoc redhat-rpm-config coreutils bash gcc
 
@@ -65,17 +59,6 @@ mkdir build
 %build
 cd build
 %cmake3 -Wdev \
-%if %{with sanatize}
- -DUSE_SANITIZE=ON \
-%if %{with staticsanitize}
- -DUSE_SANITIZE_AS_STATIC=ON \
-%else
- -DUSE_SANITIZE_AS_STATIC=OFF \
-%endif
-%else
- -DUSE_SANITIZE=OFF \
- -DUSE_SANITIZE_AS_STATIC=OFF \
-%endif
 %if %{with libcap}
  -DUSE_CAPABILITIES=ON \
 %else

@@ -6,22 +6,31 @@ set(VERSION "1.0")
 
 set(LANGUAGES "C")
 
-MACRO(MACRO_ENSURE_OUT_OF_SOURCE_BUILD MSG)
-    STRING(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" insource)
-    GET_FILENAME_COMPONENT(PARENTDIR ${CMAKE_SOURCE_DIR} PATH)
-    STRING(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${PARENTDIR}" insourcesubdir)
-    IF(insource OR insourcesubdir)
-        MESSAGE(FATAL_ERROR "${MSG}")
-    ENDIF(insource OR insourcesubdir)
-ENDMACRO(MACRO_ENSURE_OUT_OF_SOURCE_BUILD)
+####
+# CMake modules
+include(FeatureSummary)
+set_package_properties(kcron PROPERTIES
+ URL "https://github.com/scientificlinux/kcron"
+ DESCRIPTION "A utility for getting Kerberos credentials in scheduled jobs")
 
-macro_ensure_out_of_source_build("Must build from sub directory: mkdir build ; cd build; cmake ../")
+### Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory and run cmake from there.")
+endif()
 
-option (USE_CAPABILITIES 
-        "Use capabilities to reduce privileges" TRUE)
 
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
+###########
+#add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 
+####
+# My CMake files
 include(doc/CMakeLists.txt)
 include(src/C/CMakeLists.txt)
 include(src/shell/CMakeLists.txt)
+
+####
+# Print out feature summary
+feature_summary(WHAT ALL)
+feature_summary(FILENAME ${CMAKE_CURRENT_BINARY_DIR}/features.log WHAT ALL)
+

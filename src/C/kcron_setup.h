@@ -39,9 +39,11 @@
 */
 
 #include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
+#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE       */
 #include <sys/resource.h> /* for rlimit, RLIMIT_               */
 
-int set_ulimits(void) {
+int set_kcron_ulimits(void) __attribute__((warn_unused_result)) __attribute__((flatten));
+int set_kcron_ulimits(void) {
 
   const struct rlimit proc = {0, 0};
   const struct rlimit filesize = {1024, 2048};
@@ -52,45 +54,76 @@ int set_ulimits(void) {
   const struct rlimit fileopen = {8, 10};
   const struct rlimit cpusecs = {8, 16};
 
-  if (unlikely(setrlimit(RLIMIT_NPROC, &proc) != 0)) {
-    (void)fprintf(stderr, " Cannot disable forking.\n");
+  if (setrlimit(RLIMIT_NPROC, &proc) != 0) {
+    (void)fprintf(stderr, "%s: Cannot disable forking.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(setrlimit(RLIMIT_FSIZE, &filesize) != 0)) {
-    (void)fprintf(stderr, " Cannot lower max file size.\n");
+  if (setrlimit(RLIMIT_FSIZE, &filesize) != 0) {
+    (void)fprintf(stderr, "%s: Cannot lower max file size.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(setrlimit(RLIMIT_MEMLOCK, &memlock) != 0)) {
-    (void)fprintf(stderr, " Cannot disable memory locking.\n");
+  if (setrlimit(RLIMIT_MEMLOCK, &memlock) != 0) {
+    (void)fprintf(stderr, "%s: Cannot disable memory locking.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(setrlimit(RLIMIT_DATA, &data) != 0)) {
-    (void)fprintf(stderr, " Cannot set max data segment.\n");
+  if (setrlimit(RLIMIT_DATA, &data) != 0) {
+    (void)fprintf(stderr, "%s: Cannot set max data segment.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(setrlimit(RLIMIT_MSGQUEUE, &memq) != 0)) {
-    (void)fprintf(stderr, " Cannot disable memory queue.\n");
+  if (setrlimit(RLIMIT_MSGQUEUE, &memq) != 0) {
+    (void)fprintf(stderr, "%s: Cannot disable memory queue.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(setrlimit(RLIMIT_STACK, &stack) != 0)) {
-    (void)fprintf(stderr, " Cannot lower stack size.\n");
+  if (setrlimit(RLIMIT_STACK, &stack) != 0) {
+    (void)fprintf(stderr, "%s: Cannot lower stack size.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(setrlimit(RLIMIT_NOFILE, &fileopen) != 0)) {
-    (void)fprintf(stderr, " Cannot lower max open files.\n");
+  if (setrlimit(RLIMIT_NOFILE, &fileopen) != 0) {
+    (void)fprintf(stderr, "%s: Cannot lower max open files.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (unlikely(setrlimit(RLIMIT_CPU, &cpusecs) != 0)) {
-    (void)fprintf(stderr, " Cannot set CPU max runtime.\n");
+  if (setrlimit(RLIMIT_CPU, &cpusecs) != 0) {
+    (void)fprintf(stderr, "%s: Cannot set CPU max runtime.\n", __PROGRAM_NAME);
     return 1;
   }
 
   return 0;
+}
+
+void harden_runtime(void) __attribute__((flatten));
+void harden_runtime(void) {
+  if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1) {
+    (void)fprintf(stderr, "%s: Do not trace me.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+
+  if (prctl(PR_SET_DUMPABLE, 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot disable core dumps.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+
+  if (set_kcron_ulimits() != 0) {
+    (void)fprintf(stderr, "%s: Cannot set ulimits.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+
+#if USE_SECCOMP == 1
+  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT) != 0) {
+    (void)fprintf(stderr, "%s: Cannot drop useless syscalls.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+#endif
+
+  if (disable_capabilities() != 0) {
+    (void)fprintf(stderr, "%s: Cannot drop extra permissions.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+
 }

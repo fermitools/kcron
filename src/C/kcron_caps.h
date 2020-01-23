@@ -1,4 +1,10 @@
 /*
+ *
+ * A simple place where we keep our CAPABILITIES(7) calls
+ *
+ */
+#include "autoconf.h" /* for our automatic config bits        */
+/*
 
    Copyright 2017 Fermi Research Alliance, LLC
 
@@ -32,12 +38,108 @@
 
 */
 
-#if USE_CAPABILITIES == 1
-#include <sys/capability.h> /* for cap_value_t */
+#include <stdio.h>        /* for fprintf, stderr, etc  */
+#include <sys/types.h>    /* for uid_t, cap_t, etc     */
+#include <unistd.h>       /* for geteuid, etc          */
 
-inline int disable_capabilities(void) __attribute__((warn_unused_result));
-inline int enable_capabilities(const cap_value_t expected_cap[]) __attribute__((warn_unused_result));
+#if USE_CAPABILITIES == 1
+#include <sys/capability.h> /* for cap_t, cap_get_proc, cap_clear, etc */
+
+int disable_capabilities(void) __attribute__((warn_unused_result)) __attribute__((flatten));
+int disable_capabilities(void) {
+  cap_t capabilities;
+
+  uid_t euid;
+  euid = geteuid();
+  if (euid == 0) {
+    DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 2);
+    /* pointless for euid 0 */
+    return 0;
+  }
+
+  capabilities = cap_get_proc();
+
+  if (cap_clear(capabilities)) {
+    /* error */
+    DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 1);
+    (void)cap_free(capabilities);
+    (void)fprintf(stderr, "%s: Unable to clear CAPABILITIES\n", __PROGRAM_NAME);
+    return 1;
+  }
+
+  DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 0);
+  (void)cap_free(capabilities);
+  return 0;
+}
+
+int enable_capabilities(const cap_value_t expected_cap[]) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int enable_capabilities(const cap_value_t expected_cap[]) {
+  cap_t capabilities;
+
+  int num_caps = sizeof(*expected_cap) / sizeof((expected_cap)[0]);
+
+  uid_t euid = geteuid();
+  if (euid == 0) {
+    /* pointless for euid 0 */
+    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 2);
+    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 2);
+    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 2);
+    return 0;
+  }
+
+  capabilities = cap_get_proc();
+
+  /* clear any active capabilities */
+  if (disable_capabilities() != 0) {
+    (void)cap_free(capabilities);
+    return 1;
+  }
+
+  if (cap_set_flag(capabilities, CAP_PERMITTED, num_caps, expected_cap, CAP_SET) == -1) {
+    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 1);
+    (void)cap_free(capabilities);
+    /* error */
+    (void)fprintf(stderr, "%s: Unable to set CAPABILITIES PERMITTED\n", __PROGRAM_NAME);
+    return 1;
+  }
+  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 0);
+
+  if (cap_set_flag(capabilities, CAP_EFFECTIVE, num_caps, expected_cap, CAP_SET) == -1) {
+    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 1);
+    (void)cap_free(capabilities);
+    /* error */
+    (void)fprintf(stderr, "%s: Unable to set CAPABILITIES EFFECTIVE\n", __PROGRAM_NAME);
+    return 1;
+  }
+  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 0);
+
+  if (cap_set_proc(capabilities) == -1) {
+    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 1);
+    (void)cap_free(capabilities);
+    /* error */
+    (void)fprintf(stderr, "%s: Unable to activate CAPABILITIES\n", __PROGRAM_NAME);
+    return 1;
+  }
+  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 0);
+
+  (void)cap_free(capabilities);
+  return 0;
+}
 #else
-inline int disable_capabilities(void) __attribute__((pure)) __attribute__ ((warn_unused_result));
-inline int enable_capabilities(const cap_value_t expected_cap[]) __attribute__((pure)) __attribute__ ((warn_unused_result));
+typedef int cap_value_t; /* so prototypes stay identical */
+
+/* If not caps, just return 0 */
+int disable_capabilities(void) __attribute__((warn_unused_result)) __attribute__((flatten));
+int disable_capabilities(void) {
+  DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 2);
+  return 0;
+}
+
+int enable_capabilities(const cap_value_t expected_cap[]) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int enable_capabilities(const cap_value_t expected_cap[]) {
+  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 2);
+  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 2);
+  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 2);
+  return 0;
+}
 #endif

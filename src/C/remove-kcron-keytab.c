@@ -44,10 +44,11 @@
 #define __PROGRAM_NAME "remove-kcron-keytab"
 #endif
 
+#include <libgen.h>       /* for basename                      */
 #include <pwd.h>          /* for getpwuid, passwd              */
 #include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
 #include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
-#include <string.h>       /* for basename, memset              */
+#include <string.h>       /* for memset                        */
 #include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc     */
 #include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
 #include <sys/ptrace.h>   /* for ptrace                        */
@@ -55,8 +56,9 @@
 #include <sys/types.h>    /* for uid_t, cap_t, etc             */
 #include <unistd.h>       /* for gethostname, getuid, etc      */
 
-#include "kcron_ulimit.h" /* for set_ulimits                               */
-#include "kcron_caps.h"   /* for disable_capabilities, enable_capabilities */
+#include "kcron_caps.h"       /* for disable_capabilities, enable_capabilities */
+#include "kcron_filename.h"   /* for get_filename                              */
+#include "kcron_setup.h"      /* for the hardening constructor                 */
 
 #if USE_CAPABILITIES == 1
 const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
@@ -64,96 +66,41 @@ const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
 const cap_value_t caps[] = {};
 #endif
 
-int get_filename(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int get_filename(char *keytab) {
-
-  uid_t uid;
-  struct passwd *pd;
-  char username[USERNAME_MAX_LENGTH + 1];
-  char hostname[HOSTNAME_MAX_LENGTH + 1];
-
-  memset(username, '\0', sizeof(username));
-  memset(hostname, '\0', sizeof(hostname));
-
-  /* What is this system called? */
-  if (unlikely(gethostname(hostname, HOSTNAME_MAX_LENGTH) != 0)) {
-    (void)fprintf(stderr, "%s: gethostname() error.\n", __PROGRAM_NAME);
-    return 1;
-  }
-
-  /* What is my UID (not effective UID), ie whoami when I'm not root */
-  uid = getuid();
-  if ((pd = getpwuid(uid)) == NULL) {
-    (void)fprintf(stderr, "%s: getpwuid() error for %d.\n", __PROGRAM_NAME, uid);
-    return 1;
-  }
-  (void)snprintf(username, sizeof(username), "%s", basename(pd->pw_name));
-
-  /* Where do the keytabs go?  Here of course */
-  (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s.cron.%s.keytab", __KCRON_KEYTAB_DIR, username, basename(hostname));
-
-  return 0;
-}
-
 int main(void) {
+
+  harden_runtime();
 
   struct stat st = {0};
   char keytab[FILE_PATH_MAX_LENGTH + 1];
-  memset(keytab, '\0', sizeof(keytab));
 
-  if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1) {
-    (void)fprintf(stderr, "%s: Do not trace me.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(prctl(PR_SET_DUMPABLE, 0) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot disable core dumps.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-  if (unlikely(set_ulimits()) != 0) {
-    (void)fprintf(stderr, "%s: Cannot set ulimits.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-
-#if USE_SECCOMP == 1
-  if (unlikely(prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT) != 0)) {
-    (void)fprintf(stderr, "%s: Cannot drop useless syscalls.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-#endif
-
-  if (unlikely(disable_capabilities() != 0)) {
-    (void)fprintf(stderr, "%s: Cannot drop extra permissions.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
+  (void)memset(keytab, '\0', sizeof(keytab));
 
   /* already done keytab dir if missing */
-  if (unlikely(stat(__KCRON_KEYTAB_DIR, &st) == -1)) {
+  if (stat(__KCRON_KEYTAB_DIR, &st) == -1) {
     return EXIT_SUCCESS;
   }
 
-  if (unlikely(get_filename(keytab) != 0)) {
+  if (get_filename(keytab) != 0) {
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
   /* If keytab is missing we are done */
-  if (unlikely(stat(keytab, &st) == -1)) {
+  if (stat(keytab, &st) == -1) {
     return EXIT_SUCCESS;
   } else {
 
-    if (unlikely(enable_capabilities(caps) != 0)) {
+    if (enable_capabilities(caps) != 0) {
       (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
       return EXIT_FAILURE;
     }
 
-    if (unlikely(remove(keytab) != 0)) {
+    if (remove(keytab) != 0) {
       (void)fprintf(stderr, "%s: Failed: rm %s\n", __PROGRAM_NAME, keytab);
       return EXIT_FAILURE;
     }
 
-    if (unlikely(disable_capabilities() != 0)) {
+    if (disable_capabilities() != 0) {
       return EXIT_FAILURE;
     }
   }
