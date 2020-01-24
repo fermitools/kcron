@@ -44,21 +44,13 @@
 #define __PROGRAM_NAME "remove-kcron-keytab"
 #endif
 
-#include <libgen.h>       /* for basename                      */
-#include <pwd.h>          /* for getpwuid, passwd              */
-#include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
-#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
-#include <string.h>       /* for memset                        */
-#include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc     */
-#include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
-#include <sys/ptrace.h>   /* for ptrace                        */
-#include <sys/resource.h> /* for rlimit, RLIMIT_               */
-#include <sys/types.h>    /* for uid_t, cap_t, etc             */
-#include <unistd.h>       /* for gethostname, getuid, etc      */
+#include <stdio.h>                      /* for fprintf, stderr, remove       */
+#include <stdlib.h>                     /* for EXIT_FAILURE, EXIT_SUCCESS    */
+#include <sys/stat.h>                   /* for stat                          */
 
-#include "kcron_caps.h"       /* for disable_capabilities, enable_capabilities */
-#include "kcron_filename.h"   /* for get_filename                              */
-#include "kcron_setup.h"      /* for the hardening constructor                 */
+#include "kcron_caps.h"                 /* for disable_capabilities, etc     */
+#include "kcron_filename.h"             /* for get_filename                  */
+#include "kcron_setup.h"                /* for harden_runtime                */
 
 #if USE_CAPABILITIES == 1
 const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
@@ -76,36 +68,47 @@ void constructor(void)
 int main(void) {
 
   struct stat st = {0};
-  char keytab[FILE_PATH_MAX_LENGTH + 1];
+  char *nullpointer = NULL;
+  char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
-  (void)memset(keytab, '\0', sizeof(keytab));
 
-  /* already done keytab dir if missing */
-  if (stat(__KCRON_KEYTAB_DIR, &st) == -1) {
-    return EXIT_SUCCESS;
+  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
+    (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
+    return EXIT_FAILURE;
   }
 
-  if (get_filename(keytab) != 0) {
+  if (get_filenames(keytab, keytab_dir) != 0) {
+    free(keytab);
+    free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
   /* If keytab is missing we are done */
   if (stat(keytab, &st) == -1) {
+    free(keytab);
+    free(keytab_dir);
     return EXIT_SUCCESS;
   } else {
 
     if (enable_capabilities(caps) != 0) {
+      free(keytab);
+      free(keytab_dir);
       (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
       return EXIT_FAILURE;
     }
 
     if (remove(keytab) != 0) {
+      free(keytab);
+      free(keytab_dir);
       (void)fprintf(stderr, "%s: Failed: rm %s\n", __PROGRAM_NAME, keytab);
       return EXIT_FAILURE;
     }
 
     if (disable_capabilities() != 0) {
+      free(keytab);
+      free(keytab_dir);
       return EXIT_FAILURE;
     }
   }

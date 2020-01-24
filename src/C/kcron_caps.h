@@ -38,20 +38,25 @@
 
 */
 
-#include <stdio.h>        /* for fprintf, stderr, etc  */
-#include <sys/types.h>    /* for uid_t, cap_t, etc     */
-#include <unistd.h>       /* for geteuid, etc          */
+#ifndef KCRON_CAPS_H
+#define KCRON_CAPS_H 1
 
 #if USE_CAPABILITIES == 1
-#include <sys/capability.h> /* for cap_t, cap_get_proc, cap_clear, etc */
+
+#include <stdio.h>          /* for fprintf, stderr, etc      */
+#include <sys/capability.h> /* for cap_t, cap_get_proc, etc  */
+#include <sys/types.h>      /* for uid_t, cap_t, etc         */
+#include <unistd.h>         /* for geteuid, etc              */
+
 
 int disable_capabilities(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int disable_capabilities(void) {
   cap_t capabilities;
 
-  uid_t euid;
-  euid = geteuid();
-  if (euid == 0) {
+  uid_t euid = geteuid();
+  uid_t uid = getuid();
+
+  if ((euid == 0) || (uid == 0)) {
     DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 2);
     /* pointless for euid 0 */
     return 0;
@@ -79,7 +84,9 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
   int num_caps = sizeof(*expected_cap) / sizeof((expected_cap)[0]);
 
   uid_t euid = geteuid();
-  if (euid == 0) {
+  uid_t uid = getuid();
+
+  if ((euid == 0) || (uid == 0)) {
     /* pointless for euid 0 */
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 2);
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 2);
@@ -142,4 +149,5 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 2);
   return 0;
 }
+#endif
 #endif

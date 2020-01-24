@@ -41,8 +41,7 @@
 
 #define _USER_GID @USER_GID@
 
-#define __KCRON_KEYTAB_DIR "@KCRON_KEYTAB_DIR@"
-#define __CLIENT_KEYTAB "@CLIENT_KEYTAB@"
+#define __CLIENT_KEYTAB_DIR "@CLIENT_KEYTAB_DIR@"
 
 #define HOSTNAME_MAX_LENGTH (size_t) sysconf(_SC_HOST_NAME_MAX)
 #define USERNAME_MAX_LENGTH (size_t) sysconf(_SC_LOGIN_NAME_MAX)

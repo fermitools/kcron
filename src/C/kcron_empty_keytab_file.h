@@ -38,39 +38,52 @@
 
 */
 
-#include <stdio.h>        /* for calloc, fprintf, snprintf        */
-#include <unistd.h>       /* for getuid                           */
+#ifndef KCRON_EMPTY_KEYTAB_FILE_H
+#define KCRON_EMPTY_KEYTAB_FILE_H 1
 
+#include <stdio.h>                      /* for fprintf, stderr, NULL, etc   */
 
-int get_filenames(char *keytab, char *keytab_dir) __attribute__((nonnull (1, 2))) __attribute__((warn_unused_result)) __attribute__((flatten));
-int get_filenames(char *keytab, char *keytab_dir) {
+#include "kcron_caps.h"                 /* for disable_capabilities, etc    */
 
-  uid_t uid;
+int write_empty_keytab(char *keytab) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+int write_empty_keytab(char *keytab) {
+
+  #if USE_CAPABILITIES == 1
+  const cap_value_t caps[] = {CAP_DAC_OVERRIDE};
+  #else
+  const cap_value_t caps[] = {};
+  #endif
 
   char *nullpointer = NULL;
 
-  char *uid_str = calloc(USERNAME_MAX_LENGTH + 1, sizeof(char));
-
-  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
-    (void)fprintf(stderr, "%s: invalid memory passed in.\n", __PROGRAM_NAME);
+  if (keytab == nullpointer) {
+    (void)fprintf(stderr, "%s: no keytab file specified.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (uid_str == nullpointer) {
-    (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
+  /* This magic string makes ktutil and kadmin happy with an empty file */
+  char emptykeytab_a = 0x05;
+  char emptykeytab_b = 0x02;
+
+  FILE *fp;
+  if (enable_capabilities(caps) != 0) {
+    (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  uid = getuid();
+  if ((fp = fopen(keytab, "w+b")) == NULL) {
+    (void)fprintf(stderr, "%s: %s is missing, cannot create.\n", __PROGRAM_NAME, keytab);
+    return 1;
+  }
 
-  /* safely copy the uid from the system in */
-  (void)snprintf(uid_str, USERNAME_MAX_LENGTH, "%d", uid);
+  if (disable_capabilities() != 0) {
+    fclose(fp);
+    return 1;
+  }
 
-  (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s/client.keytab", __CLIENT_KEYTAB_DIR, uid_str);
-  (void)snprintf(keytab_dir, FILE_PATH_MAX_LENGTH, "%s/%s", __CLIENT_KEYTAB_DIR, uid_str);
-
-  free(uid_str);
-
-  return 0;
+  (void)fwrite(&emptykeytab_a, sizeof(emptykeytab_a), 1, fp);
+  (void)fwrite(&emptykeytab_b, sizeof(emptykeytab_b), 1, fp);
+  return fclose(fp);
 }
 
+#endif

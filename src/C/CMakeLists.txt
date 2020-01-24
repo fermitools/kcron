@@ -1,12 +1,6 @@
 cmake_minimum_required (VERSION 3.14)
 
 #############################
-# Set C standards
-enable_language(C)
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-
-#############################
 # Load CMake provided modules
 include(CheckIncludeFile)
 include(CheckIPOSupported)
@@ -16,6 +10,31 @@ include(CMakePrintHelpers)
 include(FeatureSummary)
 include(GNUInstallDirs)
 
+#############################
+# Our values builders can, but probably shouldn't change
+if (NOT CLIENT_KEYTAB_DIR)
+  set(CLIENT_KEYTAB_DIR /var/kerberos/krb5/user)
+  cmake_print_variables(CLIENT_KEYTAB_DIR)
+endif (NOT CLIENT_KEYTAB_DIR)
+
+if (NOT USER_GID)
+  execute_process(COMMAND bash "-c" "getent group users | cut -d ':' -f3 | tr -d '\\012'" OUTPUT_VARIABLE USER_GID)
+  cmake_print_variables(USER_GID)
+endif (NOT USER_GID)
+
+if (NOT FILE_PATH_MAX_LENGTH)
+  set(FILE_PATH_MAX_LENGTH 4096)
+  cmake_print_variables(FILE_PATH_MAX_LENGTH)
+endif (NOT FILE_PATH_MAX_LENGTH)
+
+#############################
+# Set C standards
+enable_language(C)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+#############################
+# Test rationality
 CHECK_C_SOURCE_COMPILES("int main(void) { return 0; } " CAN_COMPILE)
 if (NOT CAN_COMPILE)
   message(FATAL_ERROR "Compiler non functional")
@@ -46,17 +65,6 @@ if (USE_SYSTEMTAP)
 endif (USE_SYSTEMTAP)
 add_feature_info(WITH_SYSTEMTAP USE_SYSTEMTAP "Add systemtap tracepoints for capabilities")
 
-option (USE_SECCOMP "Add seccomp filters for binaries" FALSE)
-if (USE_SECCOMP)
-  CHECK_INCLUDE_FILE(linux/seccomp.h HAVE_SECCOMP_H)
-  if (NOT HAVE_SECCOMP_H)
-    message(FATAL_ERROR "linux/seccomp.h requested, but not found")
-  endif (NOT HAVE_SECCOMP_H)
-  message(FATAL_ERROR "SecComp not yet implemented")
-endif (USE_SECCOMP)
-add_feature_info(WITH_SECCOMP USE_SECCOMP "Add seccomp filters for binaries")
-
-
 #############################
 # Set Code position
 check_pie_supported(OUTPUT_VARIABLE output LANGUAGES C)
@@ -71,17 +79,13 @@ check_ipo_supported(RESULT IPO_RESULT)
 if(IPO_RESULT)
   set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 else()
-  message(WARNING "Interprocedural Optimizationis not supported at link time: ${output}.\n"
+  message(WARNING "Interprocedural Optimization is not supported at link time: ${output}.\n"
                   "Interprocedural Optimization will not be passed to linker.")
 endif(IPO_RESULT)
 
 #############################
 # Add required warnings level
 add_compile_options(-Wall -Wpedantic -Wconversion -Wformat -Wformat-security -Wstrict-prototypes -Wstrict-overflow -Wextra -Werror)
-
-#############################
-# Ensure the linker is hardened
-add_link_options(-Wl,-z,defs -Wl,-z,noexecstack -Wl,-z,nodump -Wl,-z,relro -Wl,-z,now -Wl,-pie -Wl,-z,combreloc)
 
 #############################
 # Permit sound debugging tables
@@ -102,11 +106,25 @@ else ()
 endif (INLINE_FUNCTIONS)
 
 #############################
+# Ensure the linker is hardened
+add_link_options(-Wl,-z,defs -Wl,-z,noexecstack -Wl,-z,nodump -Wl,-z,relro -Wl,-z,now -Wl,-pie -Wl,-z,combreloc)
+
+#############################
+# Use optimization by default
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif(NOT CMAKE_BUILD_TYPE)
+
+#############################
 # Harden the compiler
 
-# Add -D_FORTIFY_SOURCE=2 hardening flags
+if (NOT CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    # Add -D_FORTIFY_SOURCE=2 hardening flags, these only work when -O is passed
+    add_compile_options(-D_FORTIFY_SOURCE=2)
+endif (NOT CMAKE_BUILD_TYPE EQUAL "DEBUG")
+
 # ssp-buffer-size has a minor performance hit, but eh
-add_compile_options(-O2 -D_FORTIFY_SOURCE=2 --param=ssp-buffer-size=4)
+add_compile_options(--param=ssp-buffer-size=4)
 
 CHECK_C_COMPILER_FLAG(-fexceptions C_EXCEPTIONS)
 if (C_EXCEPTIONS)
@@ -151,16 +169,6 @@ else ()
 endif (FCF_PROTECT)
 
 #############################
-#############################
-#############################
-# cmake_print_variables(MY_VARIABLE)
-# cmake_print_properties( TARGETS my_target PROPERTIES POSITION_INDEPENDENT_CODE)
-# cmake -S . -B build --trace-expand --trace-source=CMakeLists.txt
-#############################
-#############################
-#############################
-
-#############################
 # Our build targets
 add_executable(init-kcron-keytab)
 add_executable(remove-kcron-keytab)
@@ -183,20 +191,6 @@ target_compile_features(remove-kcron-keytab PRIVATE c_function_prototypes)
 target_compile_features(remove-kcron-keytab PRIVATE c_static_assert)
 target_sources(remove-kcron-keytab PRIVATE ${PROJECT_SOURCE_DIR}/src/C/remove-kcron-keytab.c)
 
-
-########################################
-########################################
-########################################
-########################################
-########################################
-
-execute_process(COMMAND bash "-c" "getent group users | cut -d ':' -f3 | tr -d '\\012'" OUTPUT_VARIABLE USER_GID)
-cmake_print_variables(USER_GID)
-
-set(KCRON_KEYTAB_DIR /var/adm/krb5)
-set(CLIENT_KEYTAB /var/kerberos/krb5/user)
-set(FILE_PATH_MAX_LENGTH 4096)
-
 #############################
 # Build config file
 configure_file("${PROJECT_SOURCE_DIR}/src/C/autoconf.h.in" "${PROJECT_BINARY_DIR}/src/C/autoconf.h" @ONLY)
@@ -205,3 +199,9 @@ include_directories(${PROJECT_SOURCE_DIR}/src/C/)
 
 
 set(IgnoreMe "${BUILD_SHARED_LIBS}${CMAKE_CXX_FLAGS_RELEASE}${CMAKE_C_FLAGS_RELEASE}${CMAKE_Fortran_FLAGS_RELEASE}${INCLUDE_INSTALL_DIR}${LIB_INSTALL_DIR}${LIB_SUFFIX}${SHARE_INSTALL_PREFIX}")
+
+#############################
+# cmake_print_variables(MY_VARIABLE)
+# cmake_print_properties( TARGETS my_target PROPERTIES POSITION_INDEPENDENT_CODE)
+# cmake -S . -B build --trace-expand --trace-source=CMakeLists.txt
+#############################

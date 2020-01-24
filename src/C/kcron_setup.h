@@ -38,59 +38,64 @@
 
 */
 
+#ifndef KCRON_SETUP_H
+#define KCRON_SETUP_H 1
+
 #include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
 #include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
+#include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
+#include <sys/ptrace.h>   /* for ptrace                        */
 #include <sys/resource.h> /* for rlimit, RLIMIT_               */
 
 int set_kcron_ulimits(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_ulimits(void) {
 
   const struct rlimit proc = {0, 0};
-  const struct rlimit filesize = {1024, 2048};
-  const struct rlimit memlock = {0, 0};
-  const struct rlimit data = {16384, 32768};
-  const struct rlimit memq = {0, 0};
-  const struct rlimit stack = {1024, 2048};
-  const struct rlimit fileopen = {8, 10};
-  const struct rlimit cpusecs = {8, 16};
-
   if (setrlimit(RLIMIT_NPROC, &proc) != 0) {
     (void)fprintf(stderr, "%s: Cannot disable forking.\n", __PROGRAM_NAME);
     return 1;
   }
 
+  const struct rlimit filesize = {1024, 2048};
   if (setrlimit(RLIMIT_FSIZE, &filesize) != 0) {
     (void)fprintf(stderr, "%s: Cannot lower max file size.\n", __PROGRAM_NAME);
     return 1;
   }
 
+  const struct rlimit memlock = {0, 0};
   if (setrlimit(RLIMIT_MEMLOCK, &memlock) != 0) {
     (void)fprintf(stderr, "%s: Cannot disable memory locking.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  if (setrlimit(RLIMIT_DATA, &data) != 0) {
-    (void)fprintf(stderr, "%s: Cannot set max data segment.\n", __PROGRAM_NAME);
-    return 1;
-  }
-
+  const struct rlimit memq = {0, 0};
   if (setrlimit(RLIMIT_MSGQUEUE, &memq) != 0) {
     (void)fprintf(stderr, "%s: Cannot disable memory queue.\n", __PROGRAM_NAME);
     return 1;
   }
 
+  const struct rlimit stack = {1024, 2048};
   if (setrlimit(RLIMIT_STACK, &stack) != 0) {
     (void)fprintf(stderr, "%s: Cannot lower stack size.\n", __PROGRAM_NAME);
     return 1;
   }
 
+  const struct rlimit fileopen = {8, 10};
   if (setrlimit(RLIMIT_NOFILE, &fileopen) != 0) {
     (void)fprintf(stderr, "%s: Cannot lower max open files.\n", __PROGRAM_NAME);
     return 1;
   }
 
+  const struct rlimit cpusecs = {8, 16};
   if (setrlimit(RLIMIT_CPU, &cpusecs) != 0) {
     (void)fprintf(stderr, "%s: Cannot set CPU max runtime.\n", __PROGRAM_NAME);
+    return 1;
+  }
+
+  /* mmap likes to make a 1mb page to share, so permit is a single 1mb page */
+  const struct rlimit data = {1048576, 1048576};
+  if (setrlimit(RLIMIT_DATA, &data) != 0) {
+    (void)fprintf(stderr, "%s: Cannot set max data segment.\n", __PROGRAM_NAME);
     return 1;
   }
 
@@ -99,6 +104,7 @@ int set_kcron_ulimits(void) {
 
 void harden_runtime(void) __attribute__((flatten));
 void harden_runtime(void) {
+
   if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1) {
     (void)fprintf(stderr, "%s: Do not trace me.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
@@ -132,3 +138,5 @@ void harden_runtime(void) {
   }
 
 }
+
+#endif

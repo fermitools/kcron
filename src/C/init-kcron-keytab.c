@@ -44,42 +44,33 @@
 #define __PROGRAM_NAME "init-kcron-keytab"
 #endif
 
-#include <libgen.h>       /* for basename, dirname                */
-#include <pwd.h>          /* for getpwuid, passwd                 */
-#include <stdio.h>        /* for fprintf, fwrite, stderr, etc     */
-#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE       */
-#include <string.h>       /* for memset                           */
-#include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc        */
-#include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE           */
-#include <sys/ptrace.h>   /* for ptrace                           */
-#include <sys/types.h>    /* for uid_t, cap_t, etc                */
-#include <unistd.h>       /* for chown, gethostname, getuid, etc  */
+#include <libgen.h>                     /* for dirname                      */
+#include <stdio.h>                      /* for fprintf, stderr, NULL, etc   */
+#include <stdlib.h>                     /* for free, EXIT_FAILURE, etc      */
+#include <sys/stat.h>                   /* for S_IRWXU, stat, S_IXGRP, etc  */
+#include <unistd.h>                     /* for uid_t, getuid, chown         */
 
-#include "kcron_caps.h"       /* for disable_capabilities, enable_capabilities */
-#include "kcron_filename.h"   /* for get_filename                              */
-#include "kcron_setup.h"      /* for the hardening constructor                 */
+#include "kcron_caps.h"                 /* for disable_capabilities, etc    */
+#include "kcron_filename.h"             /* for get_filename                 */
+#include "kcron_empty_keytab_file.h"    /* for write_empty_keytab           */
+#include "kcron_setup.h"                /* for harden_runtime               */
+
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
-#endif
-#ifndef _0700
-#define _0700 S_IRWXU
-#endif
-#ifndef _1711
-#define _1711 S_ISVTX | S_IRWXU | S_IXGRP | S_IXOTH
 #endif
 #ifndef _0711
 #define _0711 S_IRWXU | S_IXGRP | S_IXOTH
 #endif
 
-#if USE_CAPABILITIES == 1
-const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_FOWNER};
-#else
-const cap_value_t caps[] = {};
-#endif
-
-int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull)) __attribute__((warn_unused_result));
+int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
+
+  #if USE_CAPABILITIES == 1
+  const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_FOWNER};
+  #else
+  const cap_value_t caps[] = {};
+  #endif
 
   struct stat st = {0};
 
@@ -89,8 +80,7 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
 
   char *nullpointer = NULL;
 
-  char path_str[FILE_PATH_MAX_LENGTH + 1];
-  (void)memset(path_str, '\0', sizeof(path_str));
+  char *path_str = NULL;
 
   if (dir == nullpointer) {
     /* nothing to do - no dir passed */
@@ -102,92 +92,62 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
     return 0;
   }
 
-  (void)snprintf(path_str, sizeof(path_str), "%s", dir);
+  path_str = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+
+  if (path_str == nullpointer) {
+    (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
+    return 1;
+  }
+
+  /* safely copy over or new dir */
+  (void)snprintf(path_str, FILE_PATH_MAX_LENGTH, "%s", dir);
 
   /* recursive, safer user/group/modes */
   if (mkdir_p(dirname(path_str), safe_owner, safe_group, safe_mode) != 0) {
     /* If it breaks abort recursion */
+    free(path_str);
     return 1;
   }
 
   if (enable_capabilities(caps) != 0) {
+    free(path_str);
     (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
 
   if (mkdir(dir, mode) != 0) {
+    free(path_str);
     (void)fprintf(stderr, "%s: unable to mkdir %s\n", __PROGRAM_NAME, dir);
     return 1;
   }
   if (chown(dir, owner, group) != 0) {
+    free(path_str);
     (void)fprintf(stderr, "%s: unable to chown %i:%i %s\n", __PROGRAM_NAME, owner, group, dir);
     return 1;
   }
   if (chmod(dir, mode) != 0) {
+    free(path_str);
     (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, mode, dir);
     return 1;
   }
 
   if (disable_capabilities() != 0) {
+    free(path_str);
     return 1;
   }
 
+  free(path_str);
   return 0;
 }
 
-int make_client_keytab_dir(void) __attribute__((warn_unused_result));
-int make_client_keytab_dir(void) {
-  /* Make UID keytab dir if missing */
-  uid_t uid;
-  char user_keytab_dir[FILE_PATH_MAX_LENGTH + 1];
-  char uid_str[USERNAME_MAX_LENGTH + 1];
+int chown_chmod_keytab(char *keytab) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+int chown_chmod_keytab(char *keytab) {
 
-  (void)memset(user_keytab_dir, '\0', sizeof(user_keytab_dir));
-  (void)memset(uid_str, '\0', sizeof(uid_str));
-
-  uid = getuid();
-
-  (void)snprintf(uid_str, sizeof(uid_str), "%d", uid);
-
-  (void)snprintf(user_keytab_dir, sizeof(user_keytab_dir), "%s/%s", __CLIENT_KEYTAB, uid_str);
-
-  if (mkdir_p(user_keytab_dir, uid, _USER_GID, _0700) != 0) {
-    return 1;
-  }
-
-  return 0;
-}
-
-int write_empty_keytab(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int write_empty_keytab(char *keytab) {
-
-  /* This magic string makes ktutil and kadmin happy with an empty file */
-  char emptykeytab_a = 0x05;
-  char emptykeytab_b = 0x02;
-
-  FILE *fp;
-  if (enable_capabilities(caps) != 0) {
-    (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
-    return 1;
-  }
-
-  if ((fp = fopen(keytab, "w+b")) == NULL) {
-    (void)fprintf(stderr, "%s: %s is missing, cannot create.\n", __PROGRAM_NAME, keytab);
-    return 1;
-  }
-
-  if (disable_capabilities() != 0) {
-    fclose(fp);
-    return 1;
-  }
-
-  (void)fwrite(&emptykeytab_a, sizeof(emptykeytab_a), 1, fp);
-  (void)fwrite(&emptykeytab_b, sizeof(emptykeytab_b), 1, fp);
-  return fclose(fp);
-}
-
-int chmod_keytab(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int chmod_keytab(char *keytab) {
+  #if USE_CAPABILITIES == 1
+  const cap_value_t caps[] = {CAP_CHOWN, CAP_FOWNER};
+  #else
+  const cap_value_t caps[] = {};
+  #endif
 
   uid_t uid;
   uid = getuid();
@@ -226,38 +186,50 @@ void constructor(void)
 int main(void) {
 
   struct stat st = {0};
-  char keytab[FILE_PATH_MAX_LENGTH + 1];
+  char *nullpointer = NULL;
+  char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
-  (void)memset(keytab, '\0', sizeof(keytab));
-
-  if (make_client_keytab_dir() != 0) {
-    (void)fprintf(stderr, "%s: Cannot setup containing KRB5 EUID directory.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-  if (mkdir_p(__KCRON_KEYTAB_DIR, 0, _USER_GID, _1711) != 0) {
-    (void)fprintf(stderr, "%s: Cannot setup containing directory.\n", __PROGRAM_NAME);
+  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
+    (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
-  if (get_filename(keytab) != 0) {
+  if (get_filenames(keytab, keytab_dir) != 0) {
+    free(keytab);
+    free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
+    return EXIT_FAILURE;
+  }
+
+  if (mkdir_p(keytab_dir, 0, 0, _0711) != 0) {
+    free(keytab);
+    free(keytab_dir);
+    (void)fprintf(stderr, "%s: Cannot make client keytab dir.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
   /* If keytab is missing make it */
   if (stat(keytab, &st) == -1) {
     if (write_empty_keytab(keytab) != 0) {
+      free(keytab);
+      free(keytab_dir);
       (void)fprintf(stderr, "%s: Cannot create keytab : %s.\n", __PROGRAM_NAME, keytab);
       return EXIT_FAILURE;
     }
   }
 
-  if (chmod_keytab(keytab) != 0) {
+  if (chown_chmod_keytab(keytab) != 0) {
+    free(keytab);
+    free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot set permissions on keytab : %s.\n", __PROGRAM_NAME, keytab);
     return EXIT_FAILURE;
   }
 
   (void)printf("%s\n", keytab);
+
+  free(keytab);
+  free(keytab_dir);
 
   return EXIT_SUCCESS;
 }
