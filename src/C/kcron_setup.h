@@ -39,7 +39,7 @@
 */
 
 #include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
-#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE       */
+#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
 #include <sys/resource.h> /* for rlimit, RLIMIT_               */
 
 int set_kcron_ulimits(void) __attribute__((warn_unused_result)) __attribute__((flatten));
@@ -106,6 +106,11 @@ void harden_runtime(void) {
 
   if (prctl(PR_SET_DUMPABLE, 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot disable core dumps.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+
+  if (clearenv() != 0) {
+    (void)fprintf(stderr, "%s: Cannot clear environment variables.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
