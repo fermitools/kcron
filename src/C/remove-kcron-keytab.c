@@ -48,7 +48,6 @@
 #include <pwd.h>          /* for getpwuid, passwd              */
 #include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
 #include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
-#include <string.h>       /* for memset                        */
 #include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc     */
 #include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
 #include <sys/ptrace.h>   /* for ptrace                        */
@@ -76,9 +75,7 @@ void constructor(void)
 int main(void) {
 
   struct stat st = {0};
-  char keytab[FILE_PATH_MAX_LENGTH + 1];
-
-  (void)memset(keytab, '\0', sizeof(keytab));
+  char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
   /* already done keytab dir if missing */
   if (stat(__KCRON_KEYTAB_DIR, &st) == -1) {
