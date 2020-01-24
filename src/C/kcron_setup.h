@@ -40,6 +40,8 @@
 
 #include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
 #include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
+#include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
+#include <sys/ptrace.h>   /* for ptrace                        */
 #include <sys/resource.h> /* for rlimit, RLIMIT_               */
 
 int set_kcron_ulimits(void) __attribute__((warn_unused_result)) __attribute__((flatten));

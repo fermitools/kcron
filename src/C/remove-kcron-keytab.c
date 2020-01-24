@@ -44,20 +44,13 @@
 #define __PROGRAM_NAME "remove-kcron-keytab"
 #endif
 
-#include <libgen.h>       /* for basename                      */
-#include <pwd.h>          /* for getpwuid, passwd              */
-#include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
-#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
-#include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc     */
-#include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
-#include <sys/ptrace.h>   /* for ptrace                        */
-#include <sys/resource.h> /* for rlimit, RLIMIT_               */
-#include <sys/types.h>    /* for uid_t, cap_t, etc             */
-#include <unistd.h>       /* for gethostname, getuid, etc      */
+#include <stdio.h>                      /* for fprintf, stderr, remove       */
+#include <stdlib.h>                     /* for EXIT_FAILURE, EXIT_SUCCESS    */
+#include <sys/stat.h>                   /* for stat                          */
 
-#include "kcron_caps.h"       /* for disable_capabilities, enable_capabilities */
-#include "kcron_filename.h"   /* for get_filename                              */
-#include "kcron_setup.h"      /* for the hardening constructor                 */
+#include "kcron_caps.h"                 /* for disable_capabilities, etc     */
+#include "kcron_filename.h"             /* for get_filename                  */
+#include "kcron_setup.h"                /* for harden_runtime                */
 
 #if USE_CAPABILITIES == 1
 const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};

@@ -38,12 +38,13 @@
 
 */
 
-#include <stdio.h>        /* for fprintf, stderr, etc  */
-#include <sys/types.h>    /* for uid_t, cap_t, etc     */
-#include <unistd.h>       /* for geteuid, etc          */
-
 #if USE_CAPABILITIES == 1
-#include <sys/capability.h> /* for cap_t, cap_get_proc, cap_clear, etc */
+
+#include <stdio.h>          /* for fprintf, stderr, etc      */
+#include <sys/capability.h> /* for cap_t, cap_get_proc, etc  */
+#include <sys/types.h>      /* for uid_t, cap_t, etc         */
+#include <unistd.h>         /* for geteuid, etc              */
+
 
 int disable_capabilities(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int disable_capabilities(void) {

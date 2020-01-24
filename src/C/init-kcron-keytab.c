@@ -44,19 +44,16 @@
 #define __PROGRAM_NAME "init-kcron-keytab"
 #endif
 
-#include <libgen.h>       /* for basename, dirname                */
-#include <pwd.h>          /* for getpwuid, passwd                 */
-#include <stdio.h>        /* for fprintf, fwrite, stderr, etc     */
-#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE       */
-#include <sys/stat.h>     /* for stat, chmod, S_IRUSR, etc        */
-#include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE           */
-#include <sys/ptrace.h>   /* for ptrace                           */
-#include <sys/types.h>    /* for uid_t, cap_t, etc                */
-#include <unistd.h>       /* for chown, gethostname, getuid, etc  */
+#include <libgen.h>                     /* for dirname                      */
+#include <stdio.h>                      /* for fprintf, stderr, NULL, etc   */
+#include <stdlib.h>                     /* for free, EXIT_FAILURE, etc      */
+#include <sys/stat.h>                   /* for S_IRWXU, stat, S_IXGRP, etc  */
+#include <unistd.h>                     /* for uid_t, getuid, chown         */
 
-#include "kcron_caps.h"       /* for disable_capabilities, enable_capabilities */
-#include "kcron_filename.h"   /* for get_filename                              */
-#include "kcron_setup.h"      /* for the hardening constructor                 */
+#include "kcron_caps.h"                 /* for disable_capabilities, etc    */
+#include "kcron_filename.h"             /* for get_filename                 */
+#include "kcron_setup.h"                /* for harden_runtime               */
+
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
