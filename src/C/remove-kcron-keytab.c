@@ -66,9 +66,14 @@ const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
 const cap_value_t caps[] = {};
 #endif
 
-int main(void) {
+void constructor(void) __attribute__((constructor));
+void constructor(void)
+{ 
+  /* Setup runtime hardening /before/ main() is even called */
+  (void)harden_runtime();
+}
 
-  harden_runtime();
+int main(void) {
 
   struct stat st = {0};
   char keytab[FILE_PATH_MAX_LENGTH + 1];

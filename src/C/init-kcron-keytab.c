@@ -216,9 +216,14 @@ int chmod_keytab(char *keytab) {
   return 0;
 }
 
-int main(void) {
+void constructor(void) __attribute__((constructor));
+void constructor(void)
+{
+  /* Setup runtime hardening /before/ main() is even called */
+  (void)harden_runtime();
+}
 
-  harden_runtime();
+int main(void) {
 
   struct stat st = {0};
   char keytab[FILE_PATH_MAX_LENGTH + 1];
