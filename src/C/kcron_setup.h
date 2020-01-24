@@ -38,6 +38,9 @@
 
 */
 
+#ifndef KCRON_SETUP_H
+#define KCRON_SETUP_H 1
+
 #include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
 #include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
 #include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
@@ -134,3 +137,5 @@ void harden_runtime(void) {
   }
 
 }
+
+#endif

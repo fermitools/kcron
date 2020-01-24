@@ -38,6 +38,9 @@
 
 */
 
+#ifndef KCRON_CAPS_H
+#define KCRON_CAPS_H 1
+
 #if USE_CAPABILITIES == 1
 
 #include <stdio.h>          /* for fprintf, stderr, etc      */
@@ -143,4 +146,5 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 2);
   return 0;
 }
+#endif
 #endif

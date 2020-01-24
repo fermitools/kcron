@@ -52,6 +52,7 @@
 
 #include "kcron_caps.h"                 /* for disable_capabilities, etc    */
 #include "kcron_filename.h"             /* for get_filename                 */
+#include "kcron_empty_keytab_file.h"    /* for write_empty_keytab           */
 #include "kcron_setup.h"                /* for harden_runtime               */
 
 
@@ -68,14 +69,14 @@
 #define _0711 S_IRWXU | S_IXGRP | S_IXOTH
 #endif
 
-#if USE_CAPABILITIES == 1
-const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_FOWNER};
-#else
-const cap_value_t caps[] = {};
-#endif
-
 int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull)) __attribute__((warn_unused_result));
 int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
+
+  #if USE_CAPABILITIES == 1
+  const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_FOWNER};
+  #else
+  const cap_value_t caps[] = {};
+  #endif
 
   struct stat st = {0};
 
@@ -169,36 +170,14 @@ int make_client_keytab_dir(void) {
   return 0;
 }
 
-int write_empty_keytab(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int write_empty_keytab(char *keytab) {
-
-  /* This magic string makes ktutil and kadmin happy with an empty file */
-  char emptykeytab_a = 0x05;
-  char emptykeytab_b = 0x02;
-
-  FILE *fp;
-  if (enable_capabilities(caps) != 0) {
-    (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
-    return 1;
-  }
-
-  if ((fp = fopen(keytab, "w+b")) == NULL) {
-    (void)fprintf(stderr, "%s: %s is missing, cannot create.\n", __PROGRAM_NAME, keytab);
-    return 1;
-  }
-
-  if (disable_capabilities() != 0) {
-    fclose(fp);
-    return 1;
-  }
-
-  (void)fwrite(&emptykeytab_a, sizeof(emptykeytab_a), 1, fp);
-  (void)fwrite(&emptykeytab_b, sizeof(emptykeytab_b), 1, fp);
-  return fclose(fp);
-}
-
 int chmod_keytab(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
 int chmod_keytab(char *keytab) {
+
+  #if USE_CAPABILITIES == 1
+  const cap_value_t caps[] = {CAP_CHOWN, CAP_FOWNER};
+  #else
+  const cap_value_t caps[] = {};
+  #endif
 
   uid_t uid;
   uid = getuid();
