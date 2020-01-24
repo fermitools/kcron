@@ -68,7 +68,13 @@ void constructor(void)
 int main(void) {
 
   struct stat st = {0};
+  char *nullpointer = NULL;
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+
+  if (keytab == nullpointer) {
+    (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
+    return EXIT_FAILURE;
+  }
 
   /* already done keytab dir if missing */
   if (stat(__KCRON_KEYTAB_DIR, &st) == -1) {
