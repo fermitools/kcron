@@ -53,9 +53,10 @@ int disable_capabilities(void) __attribute__((warn_unused_result)) __attribute__
 int disable_capabilities(void) {
   cap_t capabilities;
 
-  uid_t euid;
-  euid = geteuid();
-  if (euid == 0) {
+  uid_t euid = geteuid();
+  uid_t uid = getuid();
+
+  if ((euid == 0) || (uid == 0)) {
     DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 2);
     /* pointless for euid 0 */
     return 0;
@@ -83,7 +84,9 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
   int num_caps = sizeof(*expected_cap) / sizeof((expected_cap)[0]);
 
   uid_t euid = geteuid();
-  if (euid == 0) {
+  uid_t uid = getuid();
+
+  if ((euid == 0) || (uid == 0)) {
     /* pointless for euid 0 */
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 2);
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 2);

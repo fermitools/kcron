@@ -45,7 +45,7 @@
 
 #include "kcron_caps.h"                 /* for disable_capabilities, etc    */
 
-int write_empty_keytab(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
+int write_empty_keytab(char *keytab) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 int write_empty_keytab(char *keytab) {
 
   #if USE_CAPABILITIES == 1

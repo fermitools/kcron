@@ -1,11 +1,9 @@
 = kcron(1)
 
 == NAME
-kcron, kcroninit, kcrondestroy - Utilities getting Kerberos in scheduled jobs
+kcron, kcroninit, kcrondestroy - Utilities getting Kerberos in scheduled jobs or daemons
 
 == SYNOPSIS
-
-*kcron* authenticate a non-interactive process 
 
 *kcroninit* creates a cron principal and extracts into a keytab to be used by kcron(1)
 
@@ -13,17 +11,11 @@ kcron, kcroninit, kcrondestroy - Utilities getting Kerberos in scheduled jobs
 
 == DESCRIPTION
 
-The *kcron* utility obtains Kerberos credentials for a process using a keytab previously created by kcroninit(1).  The principal used in that keytab is of the form +username/cron/host.domain@REALM+.
+The *kcroninit* utility creates a new principal of the form +username/cron/host.domain@REALM+ and then creates a keytab file that can be used automatically by MIT Kerberos 1.11 (or later) or Heimdal Kerberos 8 (or later).  The kcroninit(1) utility must be run under account +username+ and will prompt to authenticate as +username@REALM+.
 
-The *kcroninit* utility creates a new principal of the form +username/cron/host.domain@REALM+ and then creates a keytab file that can be used by the kcron(1) utility for authentication. The kcroninit(1) utility must be run under account +username+ and will prompt to authenticate as +username@REALM+.
+The *kcrondestroy* utility destroys the kerberos principal of the form +username/cron/host.domain@REALM+ (created previously via the kcroninit(1) utility) and then removes keytab file that was used for authentication.
 
-The *kcrondestroy* utility destroys the kerberos principal of the form +username/cron/host.domain@REALM+ (created previously via the kcroninit(1) utility) and then removes keytab file that was used by kcron(1) for authentication.
-
-=== kcron
-
-If no command-line arguments are present, kcron exits after running kinit(1).  Otherwise, the arguments are concatenated with space characters between them to form a command which is given to a shell, then kdestroy(1) is executed.
-       
-       kcron scp examplefile host.example.com:~/
+After you've run the kcroninit(1) utility Kerberos will begin using this keytab when any current tickets expire.  You can force this behavior by running KDESTROY(1) on your ticket cache now.
 
 === kcroninit
 
@@ -74,9 +66,9 @@ Recent versions of kerberos are able to automatically kinit against
 
 +/var/kerberos/krb5/user/${EUID}/client.keytab+
 
-By default this behavior uses the first principle found within the keytab (KTUTIL(1) slot 1).
+if you do not have a valid Kerberos ticket..
 
-See also: https://github.com/heimdal/heimdal/issues/383
+By default this behavior uses +~/.k5identity+ if users have this file.  If not the first principle found within the keytab (KTUTIL(1) slot 1).
 
 == LICENCE
 

@@ -38,57 +38,38 @@
 
 */
 
-#include <libgen.h>       /* for basename, dirname                */
-#include <pwd.h>          /* for getpwuid, passwd                 */
 #include <stdio.h>        /* for calloc, fprintf, snprintf        */
-#include <unistd.h>       /* for gethostname, getuid              */
+#include <unistd.h>       /* for getuid                           */
 
 
-int get_filename(char *keytab) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten));
-int get_filename(char *keytab) {
+int get_filenames(char *keytab, char *keytab_dir) __attribute__((nonnull (1, 2))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int get_filenames(char *keytab, char *keytab_dir) {
 
   uid_t uid;
-  struct passwd *pd;
 
   char *nullpointer = NULL;
 
-  char *username = calloc(USERNAME_MAX_LENGTH + 1, sizeof(char));
-  char *hostname = calloc(HOSTNAME_MAX_LENGTH + 1, sizeof(char));
+  char *uid_str = calloc(USERNAME_MAX_LENGTH + 1, sizeof(char));
 
-  if ((username == nullpointer) || (hostname == nullpointer)) {
-    if (username != nullpointer) {
-      free(username);
-    }
-    if (hostname != nullpointer) {
-      free(hostname);
-    }
+  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
+    (void)fprintf(stderr, "%s: invalid memory passed in.\n", __PROGRAM_NAME);
+    return 1;
+  }
+
+  if (uid_str == nullpointer) {
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  /* What is this system called? */
-  if (gethostname(hostname, HOSTNAME_MAX_LENGTH) != 0) {
-    free(username);
-    free(hostname);
-    (void)fprintf(stderr, "%s: gethostname() error.\n", __PROGRAM_NAME);
-    return 1;
-  }
-
-  /* What is my UID (not effective UID), ie whoami when I'm not root */
   uid = getuid();
-  if ((pd = getpwuid(uid)) == NULL) {
-    free(username);
-    free(hostname);
-    (void)fprintf(stderr, "%s: getpwuid() error for %d.\n", __PROGRAM_NAME, uid);
-    return 1;
-  }
-  (void)snprintf(username, USERNAME_MAX_LENGTH, "%s", basename(pd->pw_name));
 
-  /* Where do the keytabs go?  Here of course */
-  (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s.cron.%s.keytab", __KCRON_KEYTAB_DIR, username, basename(hostname));
+  /* safely copy the uid from the system in */
+  (void)snprintf(uid_str, USERNAME_MAX_LENGTH, "%d", uid);
 
-  free(username);
-  free(hostname);
+  (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s/client.keytab", __CLIENT_KEYTAB_DIR, uid_str);
+  (void)snprintf(keytab_dir, FILE_PATH_MAX_LENGTH, "%s/%s", __CLIENT_KEYTAB_DIR, uid_str);
+
+  free(uid_str);
 
   return 0;
 }

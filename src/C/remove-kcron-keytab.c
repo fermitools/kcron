@@ -70,38 +70,45 @@ int main(void) {
   struct stat st = {0};
   char *nullpointer = NULL;
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
-  if (keytab == nullpointer) {
+
+  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
-  /* already done keytab dir if missing */
-  if (stat(__KCRON_KEYTAB_DIR, &st) == -1) {
-    return EXIT_SUCCESS;
-  }
-
-  if (get_filename(keytab) != 0) {
+  if (get_filenames(keytab, keytab_dir) != 0) {
+    free(keytab);
+    free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
   /* If keytab is missing we are done */
   if (stat(keytab, &st) == -1) {
+    free(keytab);
+    free(keytab_dir);
     return EXIT_SUCCESS;
   } else {
 
     if (enable_capabilities(caps) != 0) {
+      free(keytab);
+      free(keytab_dir);
       (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
       return EXIT_FAILURE;
     }
 
     if (remove(keytab) != 0) {
+      free(keytab);
+      free(keytab_dir);
       (void)fprintf(stderr, "%s: Failed: rm %s\n", __PROGRAM_NAME, keytab);
       return EXIT_FAILURE;
     }
 
     if (disable_capabilities() != 0) {
+      free(keytab);
+      free(keytab_dir);
       return EXIT_FAILURE;
     }
   }

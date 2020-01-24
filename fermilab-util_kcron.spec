@@ -2,17 +2,12 @@
 
 %bcond_without libcap
 %bcond_without systemtap
-%bcond_without sanatize
 
-%bcond_with seccomp
-%bcond_with staticsanitize
-
-%define kcron_keytab_dir /var/adm/krb5
 %define client_keytab_dir /var/kerberos/krb5/user
 
 Name:		fermilab-util_kcron
 
-Version:	1.0
+Version:	1.1
 Release:	1%{?dist}
 Summary:	A utility for getting Kerberos credentials in scheduled jobs
 
@@ -38,7 +33,8 @@ BuildRequires:  systemtap-sdt-devel
 BuildRequires:  libseccomp-devel
 %endif
 
-BuildRequires:	cmake3 asciidoc redhat-rpm-config coreutils bash gcc
+BuildRequires:	cmake >= 3.14
+BuildRequires:  asciidoc redhat-rpm-config coreutils bash gcc
 
 Requires:       krb5-workstation krb5-libs
 Requires:       util-linux policycoreutils
@@ -48,7 +44,7 @@ Requires(post): policycoreutils
 
 %description
 The kcron utility has a long history at Fermilab.  It is useful
-for running automatic jobs with kerberos rights.
+for running daemons and automatic jobs with kerberos rights.
 
 
 %prep
@@ -120,7 +116,6 @@ restorecon -RF %{client_keytab_dir} %{kcron_keytab_dir}
 %doc %{_mandir}/man1/*
 %attr(0755,root,root) %{_bindir}/*
 %config(noreplace) %{_sysconfdir}/sysconfig/kcron
-%dir %attr(1711,root,users) %{kcron_keytab_dir}
 
 %if %{with libcap}
 %attr(0711,root,root) %caps(cap_chown=p cap_fowner=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab

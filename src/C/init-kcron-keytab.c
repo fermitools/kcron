@@ -59,17 +59,11 @@
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
 #endif
-#ifndef _0700
-#define _0700 S_IRWXU
-#endif
-#ifndef _1711
-#define _1711 S_ISVTX | S_IRWXU | S_IXGRP | S_IXOTH
-#endif
 #ifndef _0711
 #define _0711 S_IRWXU | S_IXGRP | S_IXOTH
 #endif
 
-int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull)) __attribute__((warn_unused_result));
+int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
 
   #if USE_CAPABILITIES == 1
@@ -146,32 +140,8 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
   return 0;
 }
 
-int make_client_keytab_dir(void) __attribute__((warn_unused_result));
-int make_client_keytab_dir(void) {
-
-  /* Make UID keytab dir if missing */
-
-  uid_t uid;
-
-  char *user_keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
-  char *uid_str = calloc(USERNAME_MAX_LENGTH + 1, sizeof(char));
-
-  uid = getuid();
-
-  /* safely copy the uid from the system in */
-  (void)snprintf(uid_str, USERNAME_MAX_LENGTH, "%d", uid);
-
-  (void)snprintf(user_keytab_dir, FILE_PATH_MAX_LENGTH, "%s/%s", __CLIENT_KEYTAB, uid_str);
-
-  if (mkdir_p(user_keytab_dir, 0, 0, _0711) != 0) {
-    return 1;
-  }
-
-  return 0;
-}
-
-int chmod_keytab(char *keytab) __attribute__((nonnull)) __attribute__((warn_unused_result));
-int chmod_keytab(char *keytab) {
+int chown_chmod_keytab(char *keytab) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+int chown_chmod_keytab(char *keytab) {
 
   #if USE_CAPABILITIES == 1
   const cap_value_t caps[] = {CAP_CHOWN, CAP_FOWNER};
@@ -218,26 +188,24 @@ int main(void) {
   struct stat st = {0};
   char *nullpointer = NULL;
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
-  if (keytab == nullpointer) {
+  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
-  if (make_client_keytab_dir() != 0) {
+  if (get_filenames(keytab, keytab_dir) != 0) {
     free(keytab);
-    (void)fprintf(stderr, "%s: Cannot setup containing KRB5 EUID directory.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
-  }
-  if (mkdir_p(__KCRON_KEYTAB_DIR, 0, _USER_GID, _1711) != 0) {
-    free(keytab);
-    (void)fprintf(stderr, "%s: Cannot setup containing directory.\n", __PROGRAM_NAME);
+    free(keytab_dir);
+    (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
-  if (get_filename(keytab) != 0) {
+  if (mkdir_p(keytab_dir, 0, 0, _0711) != 0) {
     free(keytab);
-    (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
+    free(keytab_dir);
+    (void)fprintf(stderr, "%s: Cannot make client keytab dir.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
@@ -245,13 +213,15 @@ int main(void) {
   if (stat(keytab, &st) == -1) {
     if (write_empty_keytab(keytab) != 0) {
       free(keytab);
+      free(keytab_dir);
       (void)fprintf(stderr, "%s: Cannot create keytab : %s.\n", __PROGRAM_NAME, keytab);
       return EXIT_FAILURE;
     }
   }
 
-  if (chmod_keytab(keytab) != 0) {
+  if (chown_chmod_keytab(keytab) != 0) {
     free(keytab);
+    free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot set permissions on keytab : %s.\n", __PROGRAM_NAME, keytab);
     return EXIT_FAILURE;
   }
@@ -259,5 +229,7 @@ int main(void) {
   (void)printf("%s\n", keytab);
 
   free(keytab);
+  free(keytab_dir);
+
   return EXIT_SUCCESS;
 }
