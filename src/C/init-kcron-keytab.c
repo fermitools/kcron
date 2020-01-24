@@ -62,6 +62,9 @@
 #ifndef _0711
 #define _0711 S_IRWXU | S_IXGRP | S_IXOTH
 #endif
+#ifndef _1711
+#define _1711 S_ISVTX | S_IRWXU | S_IXGRP | S_IXOTH
+#endif
 
 int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
@@ -202,27 +205,27 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  if (mkdir_p(keytab_dir, 0, 0, _0711) != 0) {
+  if (mkdir_p(keytab_dir, 0, 0, _1711) != 0) {
+    (void)fprintf(stderr, "%s: Cannot make dir %s.\n", __PROGRAM_NAME, keytab_dir);
     free(keytab);
     free(keytab_dir);
-    (void)fprintf(stderr, "%s: Cannot make client keytab dir.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
   /* If keytab is missing make it */
   if (stat(keytab, &st) == -1) {
     if (write_empty_keytab(keytab) != 0) {
+      (void)fprintf(stderr, "%s: Cannot create keytab : %s.\n", __PROGRAM_NAME, keytab);
       free(keytab);
       free(keytab_dir);
-      (void)fprintf(stderr, "%s: Cannot create keytab : %s.\n", __PROGRAM_NAME, keytab);
       return EXIT_FAILURE;
     }
   }
 
   if (chown_chmod_keytab(keytab) != 0) {
+    (void)fprintf(stderr, "%s: Cannot set permissions on keytab : %s.\n", __PROGRAM_NAME, keytab);
     free(keytab);
     free(keytab_dir);
-    (void)fprintf(stderr, "%s: Cannot set permissions on keytab : %s.\n", __PROGRAM_NAME, keytab);
     return EXIT_FAILURE;
   }
 

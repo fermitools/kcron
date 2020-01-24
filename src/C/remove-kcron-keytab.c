@@ -93,16 +93,16 @@ int main(void) {
   } else {
 
     if (enable_capabilities(caps) != 0) {
+      (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
       free(keytab);
       free(keytab_dir);
-      (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
       return EXIT_FAILURE;
     }
 
     if (remove(keytab) != 0) {
+      (void)fprintf(stderr, "%s: Failed: rm %s\n", __PROGRAM_NAME, keytab);
       free(keytab);
       free(keytab_dir);
-      (void)fprintf(stderr, "%s: Failed: rm %s\n", __PROGRAM_NAME, keytab);
       return EXIT_FAILURE;
     }
 
