@@ -65,6 +65,16 @@ if (USE_SYSTEMTAP)
 endif (USE_SYSTEMTAP)
 add_feature_info(WITH_SYSTEMTAP USE_SYSTEMTAP "Add systemtap tracepoints for capabilities")
 
+option (USE_SECCOMP "Add seccomp filters for binaries" FALSE)
+if (USE_SECCOMP)
+  CHECK_INCLUDE_FILE(seccomp.h HAVE_SECCOMP_H)
+  if (NOT HAVE_SECCOMP_H)
+    message(FATAL_ERROR "seccomp.h requested, but not found")
+  endif (NOT HAVE_SECCOMP_H)
+  message(FATAL_ERROR "SecComp not yet implemented")
+endif (USE_SECCOMP)
+add_feature_info(WITH_SECCOMP USE_SECCOMP "Add seccomp filters for binaries")
+
 #############################
 # Set Code position
 check_pie_supported(OUTPUT_VARIABLE output LANGUAGES C)
