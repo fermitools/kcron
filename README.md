@@ -28,6 +28,7 @@ Followed by any flags that meet your needs, taking into account principal and ti
 Optional Runtime Requirements:
 
 * libcap - for use of system capibilities rather than suid
+* libseccomp - for dropping any unused system calls
 * systemtap - for tracing the capibilty calls within the kernel
 
 ## Build Requirements:
@@ -39,6 +40,7 @@ Optional Runtime Requirements:
 Optional Build Requirements:
 
 * libcap headers - for use of system capibilities rather than suid
+* libseccomp headers - for dropping any unused system calls
 * systemtap headers - for tracing the capibilty calls within the kernel
 
 You may change the `/var/kerberos/krb5/user/` to an alternate location at build time by setting `-DCLIENT_KEYTAB_DIR=/usr/local/var/kerberos/krb5/user/` on `cmake`.
