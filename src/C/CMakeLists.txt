@@ -178,11 +178,10 @@ endif (FCF_PROTECT)
 #############################
 # Our build targets
 add_executable(init-kcron-keytab)
-add_executable(remove-kcron-keytab)
 
 #############################
 # Setup install target
-install(TARGETS init-kcron-keytab remove-kcron-keytab DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron)
+install(TARGETS init-kcron-keytab DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron)
 
 #############################
 # Our build targets specific options
@@ -191,12 +190,6 @@ target_compile_features(init-kcron-keytab PRIVATE c_restrict)
 target_compile_features(init-kcron-keytab PRIVATE c_function_prototypes)
 target_compile_features(init-kcron-keytab PRIVATE c_static_assert)
 target_sources(init-kcron-keytab PRIVATE ${PROJECT_SOURCE_DIR}/src/C/init-kcron-keytab.c)
-
-target_compile_features(remove-kcron-keytab PRIVATE c_std_11)
-target_compile_features(remove-kcron-keytab PRIVATE c_restrict)
-target_compile_features(remove-kcron-keytab PRIVATE c_function_prototypes)
-target_compile_features(remove-kcron-keytab PRIVATE c_static_assert)
-target_sources(remove-kcron-keytab PRIVATE ${PROJECT_SOURCE_DIR}/src/C/remove-kcron-keytab.c)
 
 #############################
 # Build config file
