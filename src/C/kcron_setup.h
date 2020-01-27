@@ -41,11 +41,15 @@
 #ifndef KCRON_SETUP_H
 #define KCRON_SETUP_H 1
 
-#include <stdio.h>        /* for fprintf, fwrite, stderr, etc  */
-#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE    */
-#include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE        */
-#include <sys/ptrace.h>   /* for ptrace                        */
-#include <sys/resource.h> /* for rlimit, RLIMIT_               */
+#include <stdio.h>         /* for fprintf, fwrite, stderr, etc  */
+#include <stdlib.h>        /* for EXIT_SUCCESS, EXIT_FAILURE    */
+#include <sys/prctl.h>     /* for prctl, PR_SET_DUMPABLE        */
+#include <sys/ptrace.h>    /* for ptrace                        */
+#include <sys/resource.h>  /* for rlimit, RLIMIT_               */
+
+#if USE_SECCOMP == 1
+#include "kcron_seccomp.h" /* for set_kcron_seccomp            */
+#endif
 
 int set_kcron_ulimits(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_ulimits(void) {
@@ -126,7 +130,7 @@ void harden_runtime(void) {
   }
 
 #if USE_SECCOMP == 1
-  if (0 != 0) {
+  if (set_kcron_seccomp() != 0) {
     (void)fprintf(stderr, "%s: Cannot drop useless syscalls.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
