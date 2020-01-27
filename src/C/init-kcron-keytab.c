@@ -56,8 +56,7 @@
 #include "kcron_setup.h"                /* for harden_runtime               */
 
 #if USE_CAPABILITIES == 1
-#include <sys/capability.h>            /* for capability defines  */
-
+#include <sys/capability.h>            /* for CAP_CHOWN, CAP_FOWNER,etc     */
 #endif
 
 #ifndef _0600

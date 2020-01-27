@@ -165,7 +165,7 @@ else
 fi
 
 # Remove keytab file if exist
-${REMOVE_KEYTAB_UTIL}
+rm -f $(KEYTAB_NAME_UTIL)
 if [[ $? -eq 0 ]]; then
     echo SUCCESS!
 fi

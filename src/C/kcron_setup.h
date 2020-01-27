@@ -51,6 +51,8 @@
 #include "kcron_seccomp.h" /* for set_kcron_seccomp            */
 #endif
 
+#include "kcron_caps.h"    /* for disable_capabilities         */
+
 int set_kcron_ulimits(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_ulimits(void) {
 

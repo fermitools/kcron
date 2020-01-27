@@ -46,8 +46,6 @@ if (USE_CAPABILITIES)
   if (NOT HAVE_CAPABILITIES_H)
     message(FATAL_ERROR "sys/capability.h requested, but not found")
   endif (NOT HAVE_CAPABILITIES_H)
-
-  add_link_options(-lcap)
 endif (USE_CAPABILITIES)
 add_feature_info(WITH_CAPABILITIES USE_CAPABILITIES "Use capabilities to reduce privileges")
 
@@ -66,8 +64,6 @@ if (USE_SECCOMP)
   if (NOT HAVE_SECCOMP_H)
     message(FATAL_ERROR "seccomp.h requested, but not found")
   endif (NOT HAVE_SECCOMP_H)
-
-  add_link_options(-lseccomp)
 endif (USE_SECCOMP)
 add_feature_info(WITH_SECCOMP USE_SECCOMP "Add seccomp filters for binaries")
 
@@ -179,10 +175,12 @@ endif (FCF_PROTECT)
 #############################
 # Our build targets
 add_executable(init-kcron-keytab)
+add_executable(client-keytab-name)
 
 #############################
 # Setup install target
 install(TARGETS init-kcron-keytab DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron)
+install(TARGETS client-keytab-name DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron)
 
 #############################
 # Our build targets specific options
@@ -191,13 +189,24 @@ target_compile_features(init-kcron-keytab PRIVATE c_restrict)
 target_compile_features(init-kcron-keytab PRIVATE c_function_prototypes)
 target_compile_features(init-kcron-keytab PRIVATE c_static_assert)
 target_sources(init-kcron-keytab PRIVATE ${PROJECT_SOURCE_DIR}/src/C/init-kcron-keytab.c)
+if (USE_CAPABILITIES)
+  target_link_libraries(init-kcron-keytab PRIVATE cap)
+endif (USE_CAPABILITIES)
+if (USE_SECCOMP)
+  target_link_libraries(init-kcron-keytab PRIVATE seccomp)
+endif (USE_SECCOMP)
+
+target_compile_features(client-keytab-name PRIVATE c_std_11)
+target_compile_features(client-keytab-name PRIVATE c_restrict)
+target_compile_features(client-keytab-name PRIVATE c_function_prototypes)
+target_compile_features(client-keytab-name PRIVATE c_static_assert)
+target_sources(client-keytab-name PRIVATE ${PROJECT_SOURCE_DIR}/src/C/client-keytab-name.c)
 
 #############################
 # Build config file
 configure_file("${PROJECT_SOURCE_DIR}/src/C/autoconf.h.in" "${PROJECT_BINARY_DIR}/src/C/autoconf.h" @ONLY)
 include_directories(${PROJECT_BINARY_DIR}/src/C/)
 include_directories(${PROJECT_SOURCE_DIR}/src/C/)
-
 
 set(IgnoreMe "${BUILD_SHARED_LIBS}${CMAKE_CXX_FLAGS_RELEASE}${CMAKE_C_FLAGS_RELEASE}${CMAKE_Fortran_FLAGS_RELEASE}${INCLUDE_INSTALL_DIR}${LIB_INSTALL_DIR}${LIB_SUFFIX}${SHARE_INSTALL_PREFIX}")
 
