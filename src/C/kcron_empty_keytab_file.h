@@ -51,7 +51,7 @@ int write_empty_keytab(char *keytab) {
   #if USE_CAPABILITIES == 1
   const cap_value_t caps[] = {CAP_DAC_OVERRIDE};
   #else
-  const cap_value_t caps[] = {};
+  const cap_value_t caps[] = {-1};
   #endif
 
   char *nullpointer = NULL;

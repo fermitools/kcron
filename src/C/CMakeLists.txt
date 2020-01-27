@@ -17,11 +17,6 @@ if (NOT CLIENT_KEYTAB_DIR)
   cmake_print_variables(CLIENT_KEYTAB_DIR)
 endif (NOT CLIENT_KEYTAB_DIR)
 
-if (NOT USER_GID)
-  execute_process(COMMAND bash "-c" "getent group users | cut -d ':' -f3 | tr -d '\\012'" OUTPUT_VARIABLE USER_GID)
-  cmake_print_variables(USER_GID)
-endif (NOT USER_GID)
-
 if (NOT FILE_PATH_MAX_LENGTH)
   set(FILE_PATH_MAX_LENGTH 4096)
   cmake_print_variables(FILE_PATH_MAX_LENGTH)
@@ -122,16 +117,18 @@ add_link_options(-Wl,-z,defs -Wl,-z,noexecstack -Wl,-z,nodump -Wl,-z,relro -Wl,-
 #############################
 # Use optimization by default
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
 endif(NOT CMAKE_BUILD_TYPE)
 
 #############################
 # Harden the compiler
 
-if (NOT CMAKE_BUILD_TYPE EQUAL "DEBUG")
+if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    set(DEBUG TRUE)
+else()
     # Add -D_FORTIFY_SOURCE=2 hardening flags, these only work when -O is passed
     add_compile_options(-D_FORTIFY_SOURCE=2)
-endif (NOT CMAKE_BUILD_TYPE EQUAL "DEBUG")
+endif (CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
 # ssp-buffer-size has a minor performance hit, but eh
 add_compile_options(--param=ssp-buffer-size=4)

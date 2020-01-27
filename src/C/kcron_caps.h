@@ -49,7 +49,7 @@
 #include <unistd.h>         /* for geteuid, etc              */
 
 
-int disable_capabilities(void) __attribute__((warn_unused_result)) __attribute__((flatten));
+int disable_capabilities(void) __attribute__((flatten));
 int disable_capabilities(void) {
   cap_t capabilities;
 
@@ -81,10 +81,10 @@ int enable_capabilities(const cap_value_t expected_cap[]) __attribute__((nonnull
 int enable_capabilities(const cap_value_t expected_cap[]) {
   cap_t capabilities;
 
-  int num_caps = sizeof(*expected_cap) / sizeof((expected_cap)[0]);
-
   uid_t euid = geteuid();
   uid_t uid = getuid();
+
+  int num_caps = sizeof(cap_value_t) - 1 ;
 
   if ((euid == 0) || (uid == 0)) {
     /* pointless for euid 0 */
@@ -107,6 +107,11 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
     (void)cap_free(capabilities);
     /* error */
     (void)fprintf(stderr, "%s: Unable to set CAPABILITIES PERMITTED\n", __PROGRAM_NAME);
+    (void)fprintf(stderr, "%s: Requested CAPABILITIES PERMITTED %i:\n", __PROGRAM_NAME, num_caps);
+    for(int i=0; i < num_caps; i++) {
+        (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
+    }
+
     return 1;
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 0);
@@ -116,6 +121,11 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
     (void)cap_free(capabilities);
     /* error */
     (void)fprintf(stderr, "%s: Unable to set CAPABILITIES EFFECTIVE\n", __PROGRAM_NAME);
+    (void)fprintf(stderr, "%s: Requested CAPABILITIES EFFECTIVE %i:\n", __PROGRAM_NAME, num_caps);
+    for(int i=0; i < num_caps; i++) {
+        (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
+    }
+
     return 1;
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 0);
@@ -125,6 +135,11 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
     (void)cap_free(capabilities);
     /* error */
     (void)fprintf(stderr, "%s: Unable to activate CAPABILITIES\n", __PROGRAM_NAME);
+    (void)fprintf(stderr, "%s: Requested CAPABILITIES to activate %i:\n", __PROGRAM_NAME, num_caps);
+    for(int i=0; i < num_caps; i++) {
+        (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
+    }
+
     return 1;
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 0);

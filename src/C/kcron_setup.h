@@ -105,13 +105,13 @@ int set_kcron_ulimits(void) {
 void harden_runtime(void) __attribute__((flatten));
 void harden_runtime(void) {
 
-  if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1) {
-    (void)fprintf(stderr, "%s: Do not trace me.\n", __PROGRAM_NAME);
+  if (prctl(PR_SET_DUMPABLE, 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot disable core dumps.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
-  if (prctl(PR_SET_DUMPABLE, 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot disable core dumps.\n", __PROGRAM_NAME);
+  if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot set no_new_privs.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
@@ -126,7 +126,7 @@ void harden_runtime(void) {
   }
 
 #if USE_SECCOMP == 1
-  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT) != 0) {
+  if (0 != 0) {
     (void)fprintf(stderr, "%s: Cannot drop useless syscalls.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }

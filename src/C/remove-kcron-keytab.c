@@ -55,7 +55,7 @@
 #if USE_CAPABILITIES == 1
 const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
 #else
-const cap_value_t caps[] = {};
+const cap_value_t caps[] = {-1};
 #endif
 
 void constructor(void) __attribute__((constructor));
@@ -72,6 +72,7 @@ int main(void) {
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
   char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
+  // this might not need caps with 1711 set... test this
 
   if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
@@ -79,36 +80,36 @@ int main(void) {
   }
 
   if (get_filenames(keytab, keytab_dir) != 0) {
-    free(keytab);
-    free(keytab_dir);
+    (void)free(keytab);
+    (void)free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
   /* If keytab is missing we are done */
   if (stat(keytab, &st) == -1) {
-    free(keytab);
-    free(keytab_dir);
+    (void)free(keytab);
+    (void)free(keytab_dir);
     return EXIT_SUCCESS;
   } else {
 
     if (enable_capabilities(caps) != 0) {
       (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
-      free(keytab);
-      free(keytab_dir);
+      (void)free(keytab);
+      (void)free(keytab_dir);
       return EXIT_FAILURE;
     }
 
     if (remove(keytab) != 0) {
       (void)fprintf(stderr, "%s: Failed: rm %s\n", __PROGRAM_NAME, keytab);
-      free(keytab);
-      free(keytab_dir);
+      (void)free(keytab);
+      (void)free(keytab_dir);
       return EXIT_FAILURE;
     }
 
     if (disable_capabilities() != 0) {
-      free(keytab);
-      free(keytab_dir);
+      (void)free(keytab);
+      (void)free(keytab_dir);
       return EXIT_FAILURE;
     }
   }

@@ -55,15 +55,19 @@
 #include "kcron_empty_keytab_file.h"    /* for write_empty_keytab           */
 #include "kcron_setup.h"                /* for harden_runtime               */
 
+#if USE_CAPABILITIES == 1
+#include <sys/capability.h>            /* for capability defines  */
+
+#endif
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
 #endif
+#ifndef _0700
+#define _0700 S_IRWXU
+#endif
 #ifndef _0711
 #define _0711 S_IRWXU | S_IXGRP | S_IXOTH
-#endif
-#ifndef _1711
-#define _1711 S_ISVTX | S_IRWXU | S_IXGRP | S_IXOTH
 #endif
 
 int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
@@ -72,7 +76,7 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
   #if USE_CAPABILITIES == 1
   const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_FOWNER};
   #else
-  const cap_value_t caps[] = {};
+  const cap_value_t caps[] = {-1};
   #endif
 
   struct stat st = {0};
@@ -108,38 +112,41 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
   /* recursive, safer user/group/modes */
   if (mkdir_p(dirname(path_str), safe_owner, safe_group, safe_mode) != 0) {
     /* If it breaks abort recursion */
-    free(path_str);
+    (void)free(path_str);
     return 1;
   }
 
   if (enable_capabilities(caps) != 0) {
-    free(path_str);
+    (void)free(path_str);
     (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
 
   if (mkdir(dir, mode) != 0) {
-    free(path_str);
+    (void)free(path_str);
+    (void)disable_capabilities();
     (void)fprintf(stderr, "%s: unable to mkdir %s\n", __PROGRAM_NAME, dir);
     return 1;
   }
   if (chown(dir, owner, group) != 0) {
-    free(path_str);
+    (void)free(path_str);
+    (void)disable_capabilities();
     (void)fprintf(stderr, "%s: unable to chown %i:%i %s\n", __PROGRAM_NAME, owner, group, dir);
     return 1;
   }
   if (chmod(dir, mode) != 0) {
-    free(path_str);
+    (void)free(path_str);
+    (void)disable_capabilities();
     (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, mode, dir);
     return 1;
   }
 
   if (disable_capabilities() != 0) {
-    free(path_str);
+    (void)free(path_str);
     return 1;
   }
 
-  free(path_str);
+  (void)free(path_str);
   return 0;
 }
 
@@ -147,13 +154,13 @@ int chown_chmod_keytab(char *keytab) __attribute__((nonnull (1))) __attribute__(
 int chown_chmod_keytab(char *keytab) {
 
   #if USE_CAPABILITIES == 1
-  const cap_value_t caps[] = {CAP_CHOWN, CAP_FOWNER};
+  const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_FOWNER};
   #else
-  const cap_value_t caps[] = {};
+  const cap_value_t caps[] = {-1};
   #endif
 
-  uid_t uid;
-  uid = getuid();
+  uid_t uid = getuid();
+  gid_t gid = getgid();
 
   /* ensure permissions are as expected on keytab file */
 
@@ -162,12 +169,14 @@ int chown_chmod_keytab(char *keytab) {
     return 1;
   }
 
-  if (chown(keytab, uid, _USER_GID) != 0) {
-    (void)fprintf(stderr, "%s: unable to chown %d:%d %s\n", __PROGRAM_NAME, uid, _USER_GID, keytab);
+  if (chown(keytab, uid, gid) != 0) {
+    (void)disable_capabilities();
+    (void)fprintf(stderr, "%s: unable to chown %d:%d %s\n", __PROGRAM_NAME, uid, gid, keytab);
     return 1;
   }
 
   if (chmod(keytab, _0600) != 0) {
+    (void)disable_capabilities();
     (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, _0600, keytab);
     return 1;
   }
@@ -190,6 +199,10 @@ int main(void) {
 
   struct stat st = {0};
   char *nullpointer = NULL;
+
+  uid_t uid = getuid();
+  gid_t gid = getgid();
+
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
   char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
@@ -199,16 +212,16 @@ int main(void) {
   }
 
   if (get_filenames(keytab, keytab_dir) != 0) {
-    free(keytab);
-    free(keytab_dir);
+    (void)free(keytab);
+    (void)free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
-  if (mkdir_p(keytab_dir, 0, 0, _1711) != 0) {
+  if (mkdir_p(keytab_dir, uid, gid, _0700) != 0) {
     (void)fprintf(stderr, "%s: Cannot make dir %s.\n", __PROGRAM_NAME, keytab_dir);
-    free(keytab);
-    free(keytab_dir);
+    (void)free(keytab);
+    (void)free(keytab_dir);
     return EXIT_FAILURE;
   }
 
@@ -216,23 +229,23 @@ int main(void) {
   if (stat(keytab, &st) == -1) {
     if (write_empty_keytab(keytab) != 0) {
       (void)fprintf(stderr, "%s: Cannot create keytab : %s.\n", __PROGRAM_NAME, keytab);
-      free(keytab);
-      free(keytab_dir);
+      (void)free(keytab);
+      (void)free(keytab_dir);
       return EXIT_FAILURE;
     }
   }
 
   if (chown_chmod_keytab(keytab) != 0) {
     (void)fprintf(stderr, "%s: Cannot set permissions on keytab : %s.\n", __PROGRAM_NAME, keytab);
-    free(keytab);
-    free(keytab_dir);
+    (void)free(keytab);
+    (void)free(keytab_dir);
     return EXIT_FAILURE;
   }
 
   (void)printf("%s\n", keytab);
 
-  free(keytab);
-  free(keytab_dir);
+  (void)free(keytab);
+  (void)free(keytab_dir);
 
   return EXIT_SUCCESS;
 }
