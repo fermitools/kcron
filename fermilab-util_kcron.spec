@@ -2,6 +2,7 @@
 
 %bcond_without libcap
 %bcond_without systemtap
+%bcond_without seccomp
 
 %define client_keytab_dir /var/kerberos/krb5/user
 
@@ -36,10 +37,8 @@ BuildRequires:  libseccomp-devel
 BuildRequires:	cmake >= 3.14
 BuildRequires:  asciidoc redhat-rpm-config coreutils bash gcc
 
-Requires:       krb5-workstation krb5-libs
-Requires:       util-linux policycoreutils
-Requires(pre):  policycoreutils
-Requires(post): policycoreutils
+Requires:       krb5-workstation >= 1.11
+Requires:	util-linux
 
 
 %description
@@ -64,6 +63,11 @@ cd build
  -DUSE_SYSTEMTAP=ON \
 %else
  -DUSE_SYSTEMTAP=OFF \
+%endif
+%if %{with seccomp}
+ -DUSE_SECCOMP=ON \
+%else
+ -DUSE_SECCOMP=OFF \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_RULE_MESSAGES:BOOL=ON \
@@ -95,21 +99,15 @@ fi
 %if %{_hardened_build}
 for code in $(ls %{buildroot}%{_libexecdir}/kcron); do
     checksec -f %{buildroot}%{_libexecdir}/kcron/${code}
+    if [[ $? -ne 0 ]]; then
+      exit 1
+    fi
     checksec -ff %{buildroot}%{_libexecdir}/kcron/${code}
     if [[ $? -ne 0 ]]; then
       exit 1
     fi
 done
 %endif
-
-%pre -p /bin/bash
-semanage fcontext -a -t user_cron_spool_t '%{kcron_keytab_dir}(/.*)?' >/dev/null 2>&1
-exit 0
-
-%post -p /bin/bash
-%{__mkdir_p} %{client_keytab_dir}
-restorecon -RF %{client_keytab_dir} %{kcron_keytab_dir}
-
 
 %files
 %defattr(0644,root,root,0755)
@@ -119,10 +117,8 @@ restorecon -RF %{client_keytab_dir} %{kcron_keytab_dir}
 
 %if %{with libcap}
 %attr(0711,root,root) %caps(cap_chown=p cap_fowner=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
-%attr(0711,root,root) %caps(cap_fowner=p cap_dac_override=p) %{_libexecdir}/kcron/remove-kcron-keytab
 %else
 %attr(4711,root,root) %{_libexecdir}/kcron/init-kcron-keytab
-%attr(4711,root,root) %{_libexecdir}/kcron/remove-kcron-keytab
 %endif
 
 

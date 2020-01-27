@@ -69,7 +69,7 @@ int get_filenames(char *keytab, char *keytab_dir) {
   (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s/client.keytab", __CLIENT_KEYTAB_DIR, uid_str);
   (void)snprintf(keytab_dir, FILE_PATH_MAX_LENGTH, "%s/%s", __CLIENT_KEYTAB_DIR, uid_str);
 
-  free(uid_str);
+  (void)free(uid_str);
 
   return 0;
 }

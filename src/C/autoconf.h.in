@@ -39,7 +39,7 @@
 #cmakedefine USE_SYSTEMTAP @HAVE_SDT_H@
 #cmakedefine USE_SECCOMP @HAVE_SECCOMP_H@
 
-#define _USER_GID @USER_GID@
+#cmakedefine DEBUG
 
 #define __CLIENT_KEYTAB_DIR "@CLIENT_KEYTAB_DIR@"
 

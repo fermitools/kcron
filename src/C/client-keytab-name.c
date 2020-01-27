@@ -1,8 +1,8 @@
 /*
  *
- * A simple program that removes a file in a deterministic location.
+ * A simple program that generates a blank keytab in a deterministic location.
  *
- * It should be SETUID root or have the right CAPABILITIES(7).
+ * It should be SETUID(3p) root or have the right CAPABILITIES(7).
  *
  */
 #include "autoconf.h" /* for our automatic config bits        */
@@ -41,37 +41,20 @@
 */
 
 #ifndef __PROGRAM_NAME
-#define __PROGRAM_NAME "remove-kcron-keytab"
+#define __PROGRAM_NAME "client-keytab-name"
 #endif
 
-#include <stdio.h>                      /* for fprintf, stderr, remove       */
-#include <stdlib.h>                     /* for EXIT_FAILURE, EXIT_SUCCESS    */
-#include <sys/stat.h>                   /* for stat                          */
+#include <stdio.h>                      /* for fprintf, stderr, NULL, etc   */
+#include <stdlib.h>                     /* for free, EXIT_FAILURE, etc      */
 
-#include "kcron_caps.h"                 /* for disable_capabilities, etc     */
-#include "kcron_filename.h"             /* for get_filename                  */
-#include "kcron_setup.h"                /* for harden_runtime                */
-
-#if USE_CAPABILITIES == 1
-const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
-#else
-const cap_value_t caps[] = {};
-#endif
-
-void constructor(void) __attribute__((constructor));
-void constructor(void)
-{ 
-  /* Setup runtime hardening /before/ main() is even called */
-  (void)harden_runtime();
-}
+#include "kcron_filename.h"             /* for get_filename                 */
 
 int main(void) {
 
-  struct stat st = {0};
   char *nullpointer = NULL;
+
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
   char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
-
 
   if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
@@ -79,39 +62,16 @@ int main(void) {
   }
 
   if (get_filenames(keytab, keytab_dir) != 0) {
-    free(keytab);
-    free(keytab_dir);
+    (void)free(keytab);
+    (void)free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }
 
-  /* If keytab is missing we are done */
-  if (stat(keytab, &st) == -1) {
-    free(keytab);
-    free(keytab_dir);
-    return EXIT_SUCCESS;
-  } else {
+  (void)printf("%s\n", keytab);
 
-    if (enable_capabilities(caps) != 0) {
-      free(keytab);
-      free(keytab_dir);
-      (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
-      return EXIT_FAILURE;
-    }
-
-    if (remove(keytab) != 0) {
-      free(keytab);
-      free(keytab_dir);
-      (void)fprintf(stderr, "%s: Failed: rm %s\n", __PROGRAM_NAME, keytab);
-      return EXIT_FAILURE;
-    }
-
-    if (disable_capabilities() != 0) {
-      free(keytab);
-      free(keytab_dir);
-      return EXIT_FAILURE;
-    }
-  }
+  (void)free(keytab);
+  (void)free(keytab_dir);
 
   return EXIT_SUCCESS;
 }
