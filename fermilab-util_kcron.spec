@@ -37,7 +37,8 @@ BuildRequires:  libseccomp-devel
 BuildRequires:	cmake >= 3.14
 BuildRequires:  asciidoc redhat-rpm-config coreutils bash gcc
 
-Requires:       krb5-workstation krb5-libs util-linux
+Requires:       krb5-workstation >= 1.11
+Requires:	util-linux
 
 
 %description
@@ -98,6 +99,9 @@ fi
 %if %{_hardened_build}
 for code in $(ls %{buildroot}%{_libexecdir}/kcron); do
     checksec -f %{buildroot}%{_libexecdir}/kcron/${code}
+    if [[ $? -ne 0 ]]; then
+      exit 1
+    fi
     checksec -ff %{buildroot}%{_libexecdir}/kcron/${code}
     if [[ $? -ne 0 ]]; then
       exit 1
