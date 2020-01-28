@@ -80,19 +80,19 @@ int set_kcron_ulimits(void) {
     return 1;
   }
 
-  const struct rlimit stack = {1024, 2048};
+  const struct rlimit stack = {1024, 1024};
   if (setrlimit(RLIMIT_STACK, &stack) != 0) {
     (void)fprintf(stderr, "%s: Cannot lower stack size.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  const struct rlimit fileopen = {8, 10};
+  const struct rlimit fileopen = {5, 5};
   if (setrlimit(RLIMIT_NOFILE, &fileopen) != 0) {
     (void)fprintf(stderr, "%s: Cannot lower max open files.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  const struct rlimit cpusecs = {8, 16};
+  const struct rlimit cpusecs = {4, 4};
   if (setrlimit(RLIMIT_CPU, &cpusecs) != 0) {
     (void)fprintf(stderr, "%s: Cannot set CPU max runtime.\n", __PROGRAM_NAME);
     return 1;
