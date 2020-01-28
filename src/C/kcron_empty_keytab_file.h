@@ -41,7 +41,8 @@
 #ifndef KCRON_EMPTY_KEYTAB_FILE_H
 #define KCRON_EMPTY_KEYTAB_FILE_H 1
 
-#include <stdio.h>                      /* for fprintf, stderr, NULL, etc   */
+#include <stdio.h>          /* for fprintf, stderr, NULL, etc   */
+#include <stdlib.h>         /* for EXIT_FAILURE                 */
 
 int write_empty_keytab(FILE *filehandle) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 int write_empty_keytab(FILE *filehandle) {
@@ -50,7 +51,7 @@ int write_empty_keytab(FILE *filehandle) {
 
   if (filehandle == nullpointer) {
     (void)fprintf(stderr, "%s: no keytab file specified.\n", __PROGRAM_NAME);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   /* This magic string makes ktutil and kadmin happy with an empty file */

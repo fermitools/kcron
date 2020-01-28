@@ -44,9 +44,11 @@
 #if USE_CAPABILITIES == 1
 
 #include <stdio.h>          /* for fprintf, stderr, etc      */
+#include <stdlib.h>         /* for EXIT_FAILURE              */
 #include <sys/capability.h> /* for cap_t, cap_get_proc, etc  */
 #include <sys/types.h>      /* for uid_t, cap_t, etc         */
 #include <unistd.h>         /* for geteuid, etc              */
+
 
 
 int disable_capabilities(void) __attribute__((flatten));
@@ -69,7 +71,7 @@ int disable_capabilities(void) {
     DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 1);
     (void)cap_free(capabilities);
     (void)fprintf(stderr, "%s: Unable to clear CAPABILITIES\n", __PROGRAM_NAME);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 0);
@@ -99,7 +101,7 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
   /* clear any active capabilities */
   if (disable_capabilities() != 0) {
     (void)cap_free(capabilities);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   if (cap_set_flag(capabilities, CAP_PERMITTED, num_caps, expected_cap, CAP_SET) == -1) {
@@ -112,7 +114,7 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
         (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
     }
 
-    return 1;
+    exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 0);
 
@@ -126,7 +128,7 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
         (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
     }
 
-    return 1;
+    exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 0);
 
@@ -140,7 +142,7 @@ int enable_capabilities(const cap_value_t expected_cap[]) {
         (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
     }
 
-    return 1;
+    exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 0);
 

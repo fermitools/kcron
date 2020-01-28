@@ -39,6 +39,7 @@
 */
 
 #include <stdio.h>        /* for calloc, fprintf, snprintf        */
+#include <stdlib.h>       /* for EXIT_FAILURE                     */
 #include <unistd.h>       /* for getuid                           */
 
 
@@ -54,12 +55,12 @@ int get_filenames(char *keytab, char *keytab_dir) {
 
   if (uid_str == nullpointer) {
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
     (void)fprintf(stderr, "%s: invalid memory passed in.\n", __PROGRAM_NAME);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   /* safely copy the uid from the system into a string */

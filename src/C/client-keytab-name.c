@@ -65,14 +65,14 @@ int main(void) {
     }
 
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
 
   if (get_filenames(keytab, keytab_dir) != 0) {
     (void)free(keytab);
     (void)free(keytab_dir);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
 
   (void)printf("%s\n", keytab);
@@ -80,5 +80,5 @@ int main(void) {
   (void)free(keytab);
   (void)free(keytab_dir);
 
-  return EXIT_SUCCESS;
+  exit(EXIT_SUCCESS);
 }
