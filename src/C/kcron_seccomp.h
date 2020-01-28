@@ -41,7 +41,9 @@
 #ifndef KCRON_SECCOMP_H
 #define KCRON_SECCOMP_H 1
 
-#include <seccomp.h>      /* libseccomp */
+#include <seccomp.h>      /* libseccomp                  */
+#include <stdio.h>        /* for fprintf, stderr, NULL   */
+
 
 int set_kcron_seccomp(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_seccomp(void) {
@@ -112,6 +114,12 @@ int set_kcron_seccomp(void) {
     return 1;
   }
 
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(brk), 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'brk'.\n", __PROGRAM_NAME);
+    seccomp_release(ctx);
+    return 1;
+  }
+
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fsync), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'fsync'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
@@ -132,13 +140,13 @@ int set_kcron_seccomp(void) {
     seccomp_release(ctx);
     return 1;
   }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(chown), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'chown'.\n", __PROGRAM_NAME);
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fchown), 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'fchown'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     return 1;
   }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(chmod), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'chmod'.\n", __PROGRAM_NAME);
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fchmod), 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'fchmod'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     return 1;
   }

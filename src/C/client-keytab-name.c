@@ -57,6 +57,13 @@ int main(void) {
   char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
   if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
+    if (keytab != nullpointer) {
+      free(keytab);
+    }
+    if (keytab_dir != nullpointer) {
+      free(keytab_dir);
+    }
+
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     return EXIT_FAILURE;
   }

@@ -45,27 +45,27 @@
 int get_filenames(char *keytab, char *keytab_dir) __attribute__((nonnull (1, 2))) __attribute__((warn_unused_result)) __attribute__((flatten));
 int get_filenames(char *keytab, char *keytab_dir) {
 
-  uid_t uid;
+  uid_t uid = getuid();
 
   char *nullpointer = NULL;
 
+  /* we are just using an int rather than the name, so this is enough space */
   char *uid_str = calloc(USERNAME_MAX_LENGTH + 1, sizeof(char));
-
-  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
-    (void)fprintf(stderr, "%s: invalid memory passed in.\n", __PROGRAM_NAME);
-    return 1;
-  }
 
   if (uid_str == nullpointer) {
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     return 1;
   }
 
-  uid = getuid();
+  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
+    (void)fprintf(stderr, "%s: invalid memory passed in.\n", __PROGRAM_NAME);
+    return 1;
+  }
 
-  /* safely copy the uid from the system in */
+  /* safely copy the uid from the system into a string */
   (void)snprintf(uid_str, USERNAME_MAX_LENGTH, "%d", uid);
 
+  /* build our filename variables */
   (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s/client.keytab", __CLIENT_KEYTAB_DIR, uid_str);
   (void)snprintf(keytab_dir, FILE_PATH_MAX_LENGTH, "%s/%s", __CLIENT_KEYTAB_DIR, uid_str);
 
