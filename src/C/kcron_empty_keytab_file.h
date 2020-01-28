@@ -41,49 +41,27 @@
 #ifndef KCRON_EMPTY_KEYTAB_FILE_H
 #define KCRON_EMPTY_KEYTAB_FILE_H 1
 
-#include <stdio.h>                      /* for fprintf, stderr, NULL, etc   */
+#include <stdio.h>          /* for fprintf, stderr, NULL, etc   */
+#include <stdlib.h>         /* for EXIT_FAILURE                 */
 
-#include "kcron_caps.h"                 /* for disable_capabilities, etc    */
+int write_empty_keytab(FILE *filehandle) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+int write_empty_keytab(FILE *filehandle) {
 
-int write_empty_keytab(char *keytab) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
-int write_empty_keytab(char *keytab) {
+  FILE *nullpointer = NULL;
 
-  #if USE_CAPABILITIES == 1
-  const cap_value_t caps[] = {CAP_DAC_OVERRIDE};
-  #else
-  const cap_value_t caps[] = {-1};
-  #endif
-
-  char *nullpointer = NULL;
-
-  if (keytab == nullpointer) {
+  if (filehandle == nullpointer) {
     (void)fprintf(stderr, "%s: no keytab file specified.\n", __PROGRAM_NAME);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   /* This magic string makes ktutil and kadmin happy with an empty file */
   char emptykeytab_a = 0x05;
   char emptykeytab_b = 0x02;
 
-  FILE *fp;
-  if (enable_capabilities(caps) != 0) {
-    (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
-    return 1;
-  }
+  (void)fwrite(&emptykeytab_a, sizeof(emptykeytab_a), 1, filehandle);
+  (void)fwrite(&emptykeytab_b, sizeof(emptykeytab_b), 1, filehandle);
 
-  if ((fp = fopen(keytab, "w+b")) == NULL) {
-    (void)fprintf(stderr, "%s: %s is missing, cannot create.\n", __PROGRAM_NAME, keytab);
-    return 1;
-  }
-
-  if (disable_capabilities() != 0) {
-    fclose(fp);
-    return 1;
-  }
-
-  (void)fwrite(&emptykeytab_a, sizeof(emptykeytab_a), 1, fp);
-  (void)fwrite(&emptykeytab_b, sizeof(emptykeytab_b), 1, fp);
-  return fclose(fp);
+  return 0;
 }
 
 #endif

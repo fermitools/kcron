@@ -41,7 +41,10 @@
 #ifndef KCRON_SECCOMP_H
 #define KCRON_SECCOMP_H 1
 
-#include <seccomp.h>      /* libseccomp */
+#include <seccomp.h>      /* libseccomp                  */
+#include <stdio.h>        /* for fprintf, stderr, NULL   */
+#include <stdlib.h>       /* for EXIT_FAILURE            */
+
 
 int set_kcron_seccomp(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_seccomp(void) {
@@ -50,133 +53,123 @@ int set_kcron_seccomp(void) {
   ctx = seccomp_init(SCMP_ACT_KILL); /* default action: kill */
 
   if (ctx == NULL) {
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   /* Permitted actions */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(rt_sigreturn), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'rt_sigreturn'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'exit'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit_group), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'exit_group'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(prctl), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'prctl'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(geteuid), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'geteuid'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(getuid), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'getuid'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(getgid), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'getgid'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 1)) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'write' to stdout.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 2)) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'write' to stderr.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 3)) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'write' to our file handle.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'close'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
+  }
+
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(brk), 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'brk'.\n", __PROGRAM_NAME);
+    seccomp_release(ctx);
+    exit(EXIT_FAILURE);
   }
 
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fsync), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'fsync'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fstat), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'fstat'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(stat), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'stat'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(mkdir), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'mkdir'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(chown), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'chown'.\n", __PROGRAM_NAME);
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fchown), 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'fchown'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(chmod), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'chmod'.\n", __PROGRAM_NAME);
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fchmod), 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'fchmod'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(openat), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'openat'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
 #if USE_CAPABILITIES == 1
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(capget), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'capget'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(capset), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'capset'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
-    return 1;
+    exit(EXIT_FAILURE);
   }
 #endif
-
-
-
-
-/*
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 0) != 0 {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'read'.\n", __PROGRAM_NAME);
-    seccomp_release(ctx);
-    return 1;
-  }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0) != 0 {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'write'.\n", __PROGRAM_NAME);
-    seccomp_release(ctx);
-    return 1;
-  }
-*/
 
   /* Load rules */
   seccomp_load(ctx);

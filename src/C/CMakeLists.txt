@@ -211,6 +211,10 @@ include_directories(${PROJECT_SOURCE_DIR}/src/C/)
 set(IgnoreMe "${BUILD_SHARED_LIBS}${CMAKE_CXX_FLAGS_RELEASE}${CMAKE_C_FLAGS_RELEASE}${CMAKE_Fortran_FLAGS_RELEASE}${INCLUDE_INSTALL_DIR}${LIB_INSTALL_DIR}${LIB_SUFFIX}${SHARE_INSTALL_PREFIX}")
 
 #############################
+# cppcheck
+add_custom_target(cppcheck cppcheck --xml --xml-version=2 --enable=all ${PROJECT_SOURCE_DIR}/src/ 2>${PROJECT_BINARY_DIR}/cppcheck.xml COMMAND mkdir ${PROJECT_BINARY_DIR}/cppcheck COMMAND cppcheck-htmlreport --source-dir=${PROJECT_SOURCE_DIR}/src/ --title=kcron --file=${PROJECT_BINARY_DIR}/cppcheck.xml --report-dir=${PROJECT_BINARY_DIR}/cppcheck)
+
+#############################
 # cmake_print_variables(MY_VARIABLE)
 # cmake_print_properties( TARGETS my_target PROPERTIES POSITION_INDEPENDENT_CODE)
 # cmake -S . -B build --trace-expand --trace-source=CMakeLists.txt
