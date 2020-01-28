@@ -116,7 +116,7 @@ done
 %config(noreplace) %{_sysconfdir}/sysconfig/kcron
 
 %if %{with libcap}
-%attr(0711,root,root) %caps(cap_chown=p cap_fowner=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
+%attr(0711,root,root) %caps(cap_chown=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
 %else
 %attr(4711,root,root) %{_libexecdir}/kcron/init-kcron-keytab
 %endif
