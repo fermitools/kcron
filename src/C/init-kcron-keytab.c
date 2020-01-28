@@ -45,6 +45,7 @@
 #endif
 
 #include <dirent.h>                     /* for dirfd                        */
+#include <fcntl.h>                      /* for openat, O_WRONLY             */
 #include <libgen.h>                     /* for dirname                      */
 #include <stdio.h>                      /* for fprintf, stderr, NULL, etc   */
 #include <stdlib.h>                     /* for free, EXIT_FAILURE, etc      */
@@ -202,8 +203,8 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
   return 0;
 }
 
-int chown_chmod_keytab(FILE *filehandle, char *keytab) __attribute__((nonnull (1, 2))) __attribute__((warn_unused_result));
-int chown_chmod_keytab(FILE *filehandle, char *keytab) {
+int chown_chmod_keytab(int filedescriptor, char *keytab) __attribute__((nonnull (2))) __attribute__((warn_unused_result));
+int chown_chmod_keytab(int filedescriptor, char *keytab) {
 
   #if USE_CAPABILITIES == 1
   const cap_value_t keytab_caps[] = {CAP_CHOWN};
@@ -214,6 +215,11 @@ int chown_chmod_keytab(FILE *filehandle, char *keytab) {
   uid_t uid = getuid();
   gid_t gid = getgid();
 
+  if (filedescriptor == 0) {
+    (void)fprintf(stderr, "%s: invalid file %s.\n", __PROGRAM_NAME, keytab);
+    return 1;
+  }
+
   /* ensure permissions are as expected on keytab file */
 
   if (enable_capabilities(keytab_caps) != 0) {
@@ -222,7 +228,7 @@ int chown_chmod_keytab(FILE *filehandle, char *keytab) {
   }
 
   /* use of CAP_CHOWN, needed for SUID mode */
-  if (fchown(fileno(filehandle), uid, gid) != 0) {
+  if (fchown(filedescriptor, uid, gid) != 0) {
     (void)disable_capabilities();
     (void)fprintf(stderr, "%s: unable to chown %d:%d %s\n", __PROGRAM_NAME, uid, gid, keytab);
     return 1;
@@ -234,7 +240,7 @@ int chown_chmod_keytab(FILE *filehandle, char *keytab) {
   }
 
   /* I own it now, so no need for CAP_FOWNER here */
-  if (fchmod(fileno(filehandle), _0600) != 0) {
+  if (fchmod(filedescriptor, _0600) != 0) {
     (void)disable_capabilities();
     (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, _0600, keytab);
     return 1;
@@ -254,73 +260,141 @@ void constructor(void)
 int main(void) {
 
   struct stat st = {0};
-  char *nullpointer = NULL;
-  FILE *filehandle = NULL;
+
+  char *nullstring = NULL;
+  int filedescriptor = 0;
+
+  DIR *keytab_dir = NULL;
+  DIR *null_dir = NULL;
 
   uid_t uid = getuid();
   gid_t gid = getgid();
 
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
-  char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab_filename = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
-  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
-    if (keytab != nullpointer) {
-      free(keytab);
+  if ((keytab == nullstring) || (keytab_dirname == nullstring) || (keytab_filename == nullstring)) {
+    if (keytab != nullstring) {
+      (void)free(keytab);
     }
-    if (keytab_dir != nullpointer) {
-      free(keytab_dir);
+    if (keytab_dirname != nullstring) {
+      (void)free(keytab_dirname);
+    }
+    if (keytab_filename != nullstring) {
+      (void)free(keytab_filename);
     }
 
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
-  if (get_filenames(keytab, keytab_dir) != 0) {
+  if (get_filenames(keytab_dirname, keytab_filename, keytab) != 0) {
     (void)free(keytab);
-    (void)free(keytab_dir);
+    (void)free(keytab_dirname);
+    (void)free(keytab_filename);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
-  if (mkdir_p(keytab_dir, uid, gid, _0700) != 0) {
-    (void)fprintf(stderr, "%s: Cannot make dir %s.\n", __PROGRAM_NAME, keytab_dir);
+  if (mkdir_p(keytab_dirname, uid, gid, _0700) != 0) {
+    (void)fprintf(stderr, "%s: Cannot make dir %s.\n", __PROGRAM_NAME, keytab_dirname);
     (void)free(keytab);
-    (void)free(keytab_dir);
+    (void)free(keytab_dirname);
+    (void)free(keytab_filename);
     exit(EXIT_FAILURE);
   }
 
   /* If keytab is missing make it */
   if (stat(keytab, &st) == -1) {
 
-    if ((filehandle = fopen(keytab, "w+b")) == NULL) {
+    /* use the inode of the dir we made earlier so folks can't move it      */
+    /* there is still a small race condition, but we are somewhat protected */
+    /* since opendir should make sure this is a directory                   */
+    keytab_dir = opendir(keytab_dirname);
+
+    if (keytab_dir == null_dir) {
+      (void)fprintf(stderr, "%s: unable to locate %s ?\n", __PROGRAM_NAME, keytab_dirname);
+      (void)free(keytab);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
+    }
+
+    if (fstat(dirfd(keytab_dir), &st) != 0) {
+      (void)fprintf(stderr, "%s: %s could not be read.\n", __PROGRAM_NAME, keytab_dirname);
+      (void)closedir(keytab_dir);
+      (void)free(keytab);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
+      return 1;
+    }
+
+    if (!S_ISDIR(st.st_mode)) {
+      (void)fprintf(stderr, "%s: %s is not a directory.\n", __PROGRAM_NAME, keytab_dirname);
+      (void)closedir(keytab_dir);
+      (void)free(keytab);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
+      return 1;
+    }
+
+    filedescriptor = openat(dirfd(keytab_dir), keytab_filename, O_WRONLY|O_CREAT, _0600);
+    if (filedescriptor == 0) {
       (void)fprintf(stderr, "%s: %s is missing, cannot create.\n", __PROGRAM_NAME, keytab);
+      (void)closedir(keytab_dir);
       (void)free(keytab);
-      (void)free(keytab_dir);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
       exit(EXIT_FAILURE);
     }
 
-    if (write_empty_keytab(filehandle) != 0) {
+    /* we have the fd, don't need this one any more */
+    (void)closedir(keytab_dir);
+
+    if (fstat(filedescriptor, &st) != 0) {
+      (void)fprintf(stderr, "%s: %s could not be created.\n", __PROGRAM_NAME, keytab);
+      (void)close(filedescriptor);
+      (void)free(keytab);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
+      return 1;
+    }
+
+    if (!S_ISREG(st.st_mode)) {
+      (void)fprintf(stderr, "%s: %s is not a file.\n", __PROGRAM_NAME, keytab);
+      (void)close(filedescriptor);
+      (void)free(keytab);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
+      return 1;
+    }
+
+    if (write_empty_keytab(filedescriptor) != 0) {
       (void)fprintf(stderr, "%s: Cannot create keytab : %s.\n", __PROGRAM_NAME, keytab);
-      (void)fclose(filehandle);
+      (void)close(filedescriptor);
       (void)free(keytab);
-      (void)free(keytab_dir);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
       exit(EXIT_FAILURE);
     }
 
-    if (chown_chmod_keytab(filehandle, keytab) != 0) {
+    if (chown_chmod_keytab(filedescriptor, keytab) != 0) {
       (void)fprintf(stderr, "%s: Cannot set permissions on keytab : %s.\n", __PROGRAM_NAME, keytab);
+      (void)close(filedescriptor);
       (void)free(keytab);
-      (void)free(keytab_dir);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
       exit(EXIT_FAILURE);
     }
 
-    (void)fclose(filehandle);
+    (void)close(filedescriptor);
   }
 
   (void)printf("%s\n", keytab);
 
   (void)free(keytab);
-  (void)free(keytab_dir);
+  (void)free(keytab_dirname);
+  (void)free(keytab_filename);
 
   exit(EXIT_SUCCESS);
 }

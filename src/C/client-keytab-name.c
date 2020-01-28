@@ -51,26 +51,31 @@
 
 int main(void) {
 
-  char *nullpointer = NULL;
+  char *nullstring = NULL;
 
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
-  char *keytab_dir = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab_filename = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
-  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
-    if (keytab != nullpointer) {
+  if ((keytab == nullstring) || (keytab_dirname == nullstring) || (keytab_filename == nullstring)) {
+    if (keytab != nullstring) {
       free(keytab);
     }
-    if (keytab_dir != nullpointer) {
-      free(keytab_dir);
+    if (keytab_dirname != nullstring) {
+      free(keytab_dirname);
+    }
+    if (keytab_filename != nullstring) {
+      free(keytab_filename);
     }
 
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
-  if (get_filenames(keytab, keytab_dir) != 0) {
+  if (get_filenames(keytab_dirname, keytab_filename, keytab) != 0) {
     (void)free(keytab);
-    (void)free(keytab_dir);
+    (void)free(keytab_dirname);
+    (void)free(keytab_filename);
     (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
@@ -78,7 +83,8 @@ int main(void) {
   (void)printf("%s\n", keytab);
 
   (void)free(keytab);
-  (void)free(keytab_dir);
+  (void)free(keytab_dirname);
+  (void)free(keytab_filename);
 
   exit(EXIT_SUCCESS);
 }

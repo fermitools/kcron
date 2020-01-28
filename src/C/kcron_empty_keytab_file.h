@@ -44,12 +44,10 @@
 #include <stdio.h>          /* for fprintf, stderr, NULL, etc   */
 #include <stdlib.h>         /* for EXIT_FAILURE                 */
 
-int write_empty_keytab(FILE *filehandle) __attribute__((nonnull (1))) __attribute__((warn_unused_result));
-int write_empty_keytab(FILE *filehandle) {
+int write_empty_keytab(int filedescriptor) __attribute__((warn_unused_result));
+int write_empty_keytab(int filedescriptor) {
 
-  FILE *nullpointer = NULL;
-
-  if (filehandle == nullpointer) {
+  if (filedescriptor == 0) {
     (void)fprintf(stderr, "%s: no keytab file specified.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
@@ -58,8 +56,16 @@ int write_empty_keytab(FILE *filehandle) {
   char emptykeytab_a = 0x05;
   char emptykeytab_b = 0x02;
 
-  (void)fwrite(&emptykeytab_a, sizeof(emptykeytab_a), 1, filehandle);
-  (void)fwrite(&emptykeytab_b, sizeof(emptykeytab_b), 1, filehandle);
+  if (write(filedescriptor, &emptykeytab_a, sizeof(emptykeytab_a)) != sizeof(emptykeytab_a)) {
+    (void)fprintf(stderr, "%s: could not write initial block to keytab.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+  if (write(filedescriptor, &emptykeytab_b, sizeof(emptykeytab_b)) != sizeof(emptykeytab_b)) {
+    (void)fprintf(stderr, "%s: could not write initial blocks to keytab.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+
+  (void)fsync(filedescriptor);
 
   return 0;
 }

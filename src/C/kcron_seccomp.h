@@ -104,7 +104,10 @@ int set_kcron_seccomp(void) {
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 3)) != 0) {
+/*
+ *   Our directory handle (#3) is just a pointer, no actualy modifications
+*/
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'write' to our file handle.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
