@@ -8,13 +8,13 @@
 
 Name:		fermilab-util_kcron
 
-Version:	1.1
+Version:	1.2
 Release:	1%{?dist}
 Summary:	A utility for getting Kerberos credentials in scheduled jobs
 
 Group:		Fermilab
 License:	MIT
-URL:		https://servicedesk.fnal.gov
+URL:		https://github.com/scientificlinux/kcron
 Source0:	kcron-%{version}.tar.gz
 
 Provides:	kcron
