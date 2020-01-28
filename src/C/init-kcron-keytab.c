@@ -215,31 +215,46 @@ int chown_chmod_keytab(int filedescriptor, char *keytab) {
   uid_t uid = getuid();
   gid_t gid = getgid();
 
+  struct stat st = {0};
+
   if (filedescriptor == 0) {
     (void)fprintf(stderr, "%s: invalid file %s.\n", __PROGRAM_NAME, keytab);
     return 1;
   }
 
-  /* ensure permissions are as expected on keytab file */
-
-  if (enable_capabilities(keytab_caps) != 0) {
-    (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
+  if (fstat(filedescriptor, &st) != 0) {
+    (void)fprintf(stderr, "%s: cannot stat file %s.\n", __PROGRAM_NAME, keytab);
     return 1;
   }
 
-  /* use of CAP_CHOWN, needed for SUID mode */
-  if (fchown(filedescriptor, uid, gid) != 0) {
-    (void)disable_capabilities();
-    (void)fprintf(stderr, "%s: unable to chown %d:%d %s\n", __PROGRAM_NAME, uid, gid, keytab);
+  if (!S_ISREG(st.st_mode)) {
+    (void)fprintf(stderr, "%s: %s is not a regular file.\n", __PROGRAM_NAME, keytab);
     return 1;
   }
 
-  if (disable_capabilities() != 0) {
-    (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
-    return 1;
+  if (st.st_uid != uid) {
+    /* I don't own the file somehow... */
+
+    if (enable_capabilities(keytab_caps) != 0) {
+      (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
+      return 1;
+    }
+
+    /* use of CAP_CHOWN, needed for SUID mode */
+    if (fchown(filedescriptor, uid, gid) != 0) {
+      (void)disable_capabilities();
+      (void)fprintf(stderr, "%s: unable to chown %d:%d %s\n", __PROGRAM_NAME, uid, gid, keytab);
+      return 1;
+    }
+
+    if (disable_capabilities() != 0) {
+      (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
+      return 1;
+    }
   }
 
   /* I own it now, so no need for CAP_FOWNER here */
+  /* ensure permissions are as expected on keytab file */
   if (fchmod(filedescriptor, _0600) != 0) {
     (void)disable_capabilities();
     (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, _0600, keytab);
