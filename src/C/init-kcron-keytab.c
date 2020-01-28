@@ -227,6 +227,11 @@ int chown_chmod_keytab(int filedescriptor, char *keytab) {
     return 1;
   }
 
+  if (!S_ISREG(st.st_mode)) {
+    (void)fprintf(stderr, "%s: %s is not a regular file.\n", __PROGRAM_NAME, keytab);
+    return 1;
+  }
+
   if (st.st_uid != uid) {
     /* I don't own the file somehow... */
 
