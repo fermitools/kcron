@@ -43,8 +43,8 @@
 #include <unistd.h>       /* for getuid                           */
 
 
-int get_filenames(char *keytab, char *keytab_dir) __attribute__((nonnull (1, 2))) __attribute__((warn_unused_result)) __attribute__((flatten));
-int get_filenames(char *keytab, char *keytab_dir) {
+int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) __attribute__((nonnull (1, 2, 3))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) {
 
   uid_t uid = getuid();
 
@@ -58,7 +58,7 @@ int get_filenames(char *keytab, char *keytab_dir) {
     exit(EXIT_FAILURE);
   }
 
-  if ((keytab == nullpointer) || (keytab_dir == nullpointer)) {
+  if ((keytab == nullpointer) || (keytab_dir == nullpointer) || (keytab_filename == nullpointer)) {
     (void)fprintf(stderr, "%s: invalid memory passed in.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
@@ -67,8 +67,9 @@ int get_filenames(char *keytab, char *keytab_dir) {
   (void)snprintf(uid_str, USERNAME_MAX_LENGTH, "%d", uid);
 
   /* build our filename variables */
-  (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s/client.keytab", __CLIENT_KEYTAB_DIR, uid_str);
+  (void)snprintf(keytab_filename, FILE_PATH_MAX_LENGTH, "client.keytab");
   (void)snprintf(keytab_dir, FILE_PATH_MAX_LENGTH, "%s/%s", __CLIENT_KEYTAB_DIR, uid_str);
+  (void)snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s", keytab_dir, keytab_filename);
 
   (void)free(uid_str);
 
