@@ -232,7 +232,7 @@ int chown_chmod_keytab(int filedescriptor, char *keytab) {
     return 1;
   }
 
-  if (st.st_uid != uid) {
+  if (st.st_uid != uid || st.st_gid != gid) {
     /* I don't own the file somehow... */
 
     if (enable_capabilities(keytab_caps) != 0) {
