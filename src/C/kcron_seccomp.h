@@ -45,6 +45,19 @@
 #include <stdio.h>        /* for fprintf, stderr, NULL   */
 #include <stdlib.h>       /* for EXIT_FAILURE            */
 
+#include <sys/stat.h>     /* for S_IRWXU, stat, S_IXGRP, etc  */
+
+
+#ifndef _0600
+#define _0600 S_IRUSR | S_IWUSR
+#endif
+#ifndef _0700
+#define _0700 S_IRWXU
+#endif
+#ifndef _0711
+#define _0711 S_IRWXU | S_IXGRP | S_IXOTH
+#endif
+
 
 int set_kcron_seccomp(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_seccomp(void) {
@@ -56,9 +69,14 @@ int set_kcron_seccomp(void) {
     exit(EXIT_FAILURE);
   }
 
-  /* Permitted actions */
+  /* Basic features */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(rt_sigreturn), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'rt_sigreturn'.\n", __PROGRAM_NAME);
+    seccomp_release(ctx);
+    exit(EXIT_FAILURE);
+  }
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(brk), 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'brk'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
@@ -72,12 +90,8 @@ int set_kcron_seccomp(void) {
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(prctl), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'prctl'.\n", __PROGRAM_NAME);
-    seccomp_release(ctx);
-    exit(EXIT_FAILURE);
-  }
 
+  /* Permitted actions */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(geteuid), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'geteuid'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
@@ -94,41 +108,69 @@ int set_kcron_seccomp(void) {
     exit(EXIT_FAILURE);
   }
 
+
+ /*
+  * STDOUT
+  */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 1)) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'write' to stdout.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
+
+ /*
+  * STDERR
+  */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 2)) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'write' to stderr.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
-/*
- *   Our directory handle (#3) is just a pointer, no actualy modifications
-*/
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'write' to our file handle.\n", __PROGRAM_NAME);
+
+ /*
+  *   Our directory handle
+  */
+
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(openat), 0) != 0) {
+    /* not sure how to restrict this to the args I want */
+    (void)fprintf(stderr, "%s: Cannot whitelist 'openat'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 0) != 0) {
+
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 1, SCMP_A0(SCMP_CMP_EQ, 3)) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'close'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
 
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(brk), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'brk'.\n", __PROGRAM_NAME);
+ /*
+  *   Our file handle
+  */
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'write' to our file handle.\n", __PROGRAM_NAME);
+    seccomp_release(ctx);
+    exit(EXIT_FAILURE);
+  }
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'close'.\n", __PROGRAM_NAME);
+    seccomp_release(ctx);
+    exit(EXIT_FAILURE);
+  }
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fsync), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'fsync' on file handle.\n", __PROGRAM_NAME);
+    seccomp_release(ctx);
+    exit(EXIT_FAILURE);
+  }
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fchmod), 2, SCMP_A0(SCMP_CMP_EQ, 4), SCMP_A1(SCMP_CMP_EQ, _0600)) != 0) {
+    (void)fprintf(stderr, "%s: Cannot whitelist 'fchmod' for mode 0600 only.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
 
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fsync), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'fsync'.\n", __PROGRAM_NAME);
-    seccomp_release(ctx);
-    exit(EXIT_FAILURE);
-  }
+ /*
+  *   General usage, not sure how to restrict these to the args I want....
+  */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fstat), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot whitelist 'fstat'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
@@ -149,17 +191,7 @@ int set_kcron_seccomp(void) {
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fchmod), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'fchmod'.\n", __PROGRAM_NAME);
-    seccomp_release(ctx);
-    exit(EXIT_FAILURE);
-  }
 
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(openat), 0) != 0) {
-    (void)fprintf(stderr, "%s: Cannot whitelist 'openat'.\n", __PROGRAM_NAME);
-    seccomp_release(ctx);
-    exit(EXIT_FAILURE);
-  }
 
 #if USE_CAPABILITIES == 1
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(capget), 0) != 0) {
