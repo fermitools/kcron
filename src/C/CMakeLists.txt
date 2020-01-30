@@ -49,6 +49,7 @@ if (USE_CAPABILITIES)
 endif (USE_CAPABILITIES)
 add_feature_info(WITH_CAPABILITIES USE_CAPABILITIES "Use capabilities to reduce privileges")
 
+
 option (USE_SYSTEMTAP "Add systemtap tracepoints for capabilities" TRUE)
 if (USE_SYSTEMTAP)
   CHECK_INCLUDE_FILE(sys/sdt.h HAVE_SDT_H)
@@ -207,6 +208,10 @@ target_sources(client-keytab-name PRIVATE ${PROJECT_SOURCE_DIR}/src/C/client-key
 configure_file("${PROJECT_SOURCE_DIR}/src/C/autoconf.h.in" "${PROJECT_BINARY_DIR}/src/C/autoconf.h" @ONLY)
 include_directories(${PROJECT_BINARY_DIR}/src/C/)
 include_directories(${PROJECT_SOURCE_DIR}/src/C/)
+
+if (USE_CAPABILITIES)
+  message(WARNING "\nThere is probably a trick with gdb to exploit this!\nYou should still setuid the binary!\nWhomever owns the memory this program allocates can become root if they can edit their own memory!\n")
+endif (USE_CAPABILITIES)
 
 set(IgnoreMe "${BUILD_SHARED_LIBS}${CMAKE_CXX_FLAGS_RELEASE}${CMAKE_C_FLAGS_RELEASE}${CMAKE_Fortran_FLAGS_RELEASE}${INCLUDE_INSTALL_DIR}${LIB_INSTALL_DIR}${LIB_SUFFIX}${SHARE_INSTALL_PREFIX}")
 
