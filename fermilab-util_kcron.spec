@@ -116,7 +116,9 @@ done
 %config(noreplace) %{_sysconfdir}/sysconfig/kcron
 
 %if %{with libcap}
-%attr(0711,root,root) %caps(cap_chown=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
+# If you can edit the memory this allocates, you can redirect the caps
+#  so we still suid root to prevent this.
+%attr(4711,root,root) %caps(cap_chown=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
 %else
 %attr(4711,root,root) %{_libexecdir}/kcron/init-kcron-keytab
 %endif

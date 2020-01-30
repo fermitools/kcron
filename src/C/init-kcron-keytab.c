@@ -80,6 +80,7 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
   #else
   const cap_value_t caps[] = {-1};
   #endif
+  int num_caps = sizeof(caps) / sizeof(cap_value_t);
 
   struct stat st = {0};
 
@@ -131,7 +132,7 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
     return 1;
   }
 
-  if (enable_capabilities(caps) != 0) {
+  if (enable_capabilities(caps, num_caps) != 0) {
     (void)free(path_str);
     (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
@@ -176,7 +177,7 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
     return 1;
   }
 
-  if (enable_capabilities(caps) != 0) {
+  if (enable_capabilities(caps, num_caps) != 0) {
     (void)free(path_str);
     (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
@@ -211,6 +212,7 @@ int chown_chmod_keytab(int filedescriptor, char *keytab) {
   #else
   const cap_value_t keytab_caps[] = {-1};
   #endif
+  int num_caps = sizeof(keytab_caps) / sizeof(cap_value_t);
 
   uid_t uid = getuid();
   gid_t gid = getgid();
@@ -235,7 +237,7 @@ int chown_chmod_keytab(int filedescriptor, char *keytab) {
   if (st.st_uid != uid || st.st_gid != gid) {
     /* I don't own the file somehow... */
 
-    if (enable_capabilities(keytab_caps) != 0) {
+    if (enable_capabilities(keytab_caps, num_caps) != 0) {
       (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
       return 1;
     }
