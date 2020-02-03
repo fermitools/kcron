@@ -4,7 +4,7 @@ project(kcron)
 
 set(LANGUAGES "C")
 
-execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE VERSION)
+execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 ####
 # CMake modules
@@ -13,6 +13,16 @@ include(FeatureSummary)
 set_package_properties(kcron PROPERTIES
  URL "https://github.com/scientificlinux/kcron"
  DESCRIPTION "A utility for getting Kerberos credentials in scheduled jobs")
+
+
+set(CPACK_PACKAGE_NAME "fermilab-util_${CMAKE_PROJECT_NAME}")
+set(CPACK_PACKAGE_VERSION ${VERSION})
+set(CPACK_PACKAGE_RELEASE 1)
+
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_GENERATOR "RPM")
+include(CPack)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
