@@ -19,7 +19,7 @@ Provides:	kcron
 Provides:	fermilab-util_kcron
 
 %if %{_hardened_build}
-BuildRequires: checksec
+BuildRequires: checksec openssl procps-ng
 %endif
 
 %if %{with libcap}
@@ -96,14 +96,29 @@ fi
 
 %if %{_hardened_build}
 for code in $(ls %{buildroot}%{_libexecdir}/kcron); do
+    %if (0%{?rhel} && (0%{?rhel} < 9))
+    checksec --file %{buildroot}%{_libexecdir}/kcron/${code}
+    if [[ $? -ne 0 ]]; then
+      exit 1
+    fi
+
+    checksec --fortify-file %{buildroot}%{_libexecdir}/kcron/${code}
+    if [[ $? -ne 0 ]]; then
+      exit 1
+    fi
+
+    %else
+
     checksec --file=%{buildroot}%{_libexecdir}/kcron/${code}
     if [[ $? -ne 0 ]]; then
       exit 1
     fi
+
     checksec --fortify-file=%{buildroot}%{_libexecdir}/kcron/${code}
     if [[ $? -ne 0 ]]; then
       exit 1
     fi
+    %endif
 done
 %endif
 
