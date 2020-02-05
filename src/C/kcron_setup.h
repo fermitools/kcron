@@ -62,7 +62,7 @@ int set_kcron_ulimits(void) {
     return 1;
   }
 
-  const struct rlimit filesize = {1024, 2048};
+  const struct rlimit filesize = {64, 64};
   if (setrlimit(RLIMIT_FSIZE, &filesize) != 0) {
     (void)fprintf(stderr, "%s: Cannot lower max file size.\n", __PROGRAM_NAME);
     return 1;
