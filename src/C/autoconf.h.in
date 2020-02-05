@@ -31,7 +31,10 @@
    IN THE SOFTWARE.
 
 */
-#include <unistd.h>
+#ifndef KCRON_CONF_H
+#define KCRON_CONF_H 1
+
+#include <unistd.h>   /* for sysconf */
 
 #cmakedefine VERSION "@VERSION@"
 
@@ -65,4 +68,6 @@
 
 #if USE_SECCOMP == 1
 #include <linux/seccomp.h> /* for PR_SET_SECCOMP, SECCOMP_MODE_STRICT */
+#endif
+
 #endif
