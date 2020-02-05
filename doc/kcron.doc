@@ -36,7 +36,7 @@ The kcron helper utilities utilize filesystem CAPABILITIES(7) stored as XATTR(7)
 
 On modern Linux systems, these are enabled by default.
 
-NFS does not support CAPABILITIES(7).  However, if you set this SUID, it will continue to work as expected.
+NFS does not support CAPABILITIES(7).  However, if you set this SUID 'root', it will continue to work as expected.
 
 You can review them with GETCAP(8) on /usr/libexec/kcron/*
 endif::libcap[]
@@ -62,11 +62,11 @@ KADMIN(1)
 
 The use of this utility requires changes to KDC configuration. Kerberos admins should review the README file for the details. 
 
-Recent versions of kerberos are able to automatically kinit against 
+Recent versions of kerberos (MIT 1.11+, Heimdal 8+) are able to automatically kinit against 
 
 +/var/kerberos/krb5/user/${EUID}/client.keytab+
 
-if you do not have a valid Kerberos ticket..
+if you do not have a valid Kerberos ticket.
 
 By default this behavior uses +~/.k5identity+ if users have this file.  If not the first principle found within the keytab (KTUTIL(1) slot 1).
 
