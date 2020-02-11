@@ -36,7 +36,7 @@ The kcron helper utilities utilize filesystem CAPABILITIES(7) stored as XATTR(7)
 
 On modern Linux systems, these are enabled by default.
 
-NFS does not support CAPABILITIES(7).  However, if you set this SUID 'root', it will continue to work as expected.
+NFS does not support CAPABILITIES(7).  However, if you set this SUID 'root', it will continue to work as expected.  It is a terrible idea to permit SUID applications to run SUID from network file systems.
 
 You can review them with GETCAP(8) on /usr/libexec/kcron/*
 endif::libcap[]
