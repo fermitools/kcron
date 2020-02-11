@@ -9,7 +9,7 @@ This utility can also be used to run scheduled jobs under any local account `use
 
 Kerberos administrator will first create principal `username/cron/host.domain@REALM` and provide initial password to the requestor. The requestor can then run kcroninit utility to create the keytab.
 
-When your user/job/daemon requires a Kerberos ticket, the Kerberos libraries will automatically import the ticket.
+When your user/job/daemon requires a Kerberos ticket but does not have one, the Kerberos libraries will automatically import the ticket.
 The identity is selected based on either `~/.k5identity` or slot 1 from your kcron keytab (in `/var/kerberos/krb5/user/${EUID}/client.keytab`).
 
 Runtime usage is automatic if you do not have a valid Kerberos ticket.
