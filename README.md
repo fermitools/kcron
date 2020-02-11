@@ -56,7 +56,7 @@ You may change the `/var/kerberos/krb5/user/` to an alternate location at build 
  make test
 ```
 
-The `Makefile` is not setting either SUID or CAPIBILITIES on the binary.
+The `Makefile` is not setting either SUID or CAPIBILITIES on the binary.  This is by design.
 
 See the [documentation](https://github.com/scientificlinux/kcron/blob/master/doc/kcron.doc) folder for more information
 
