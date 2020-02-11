@@ -36,7 +36,7 @@ BuildRequires:	cmake >= 3.14
 BuildRequires:  asciidoc redhat-rpm-config coreutils bash gcc
 
 Requires:       krb5-workstation >= 1.11
-Requires:	util-linux
+Requires:       util-linux coreutils
 
 
 %description
