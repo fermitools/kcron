@@ -118,6 +118,7 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
   path_str = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
 
   if (path_str == nullstring) {
+    (void)free(path_str);  /* some static analysis expects to see this here */
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
     return 1;
   }
@@ -161,6 +162,7 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
     (void)free(path_str);
     (void)disable_capabilities();
     (void)fprintf(stderr, "%s: unable to locate %s ?\n", __PROGRAM_NAME, dir);
+    return 1;
   }
 
   if (fstat(dirfd(my_dir), &st) != 0) {
@@ -335,6 +337,7 @@ int main(void) {
       (void)free(keytab);
       (void)free(keytab_dirname);
       (void)free(keytab_filename);
+      exit(EXIT_FAILURE);
     }
 
     if (fstat(dirfd(keytab_dir), &st) != 0) {
@@ -343,7 +346,7 @@ int main(void) {
       (void)free(keytab);
       (void)free(keytab_dirname);
       (void)free(keytab_filename);
-      return 1;
+      exit(EXIT_FAILURE);
     }
 
     if (!S_ISDIR(st.st_mode)) {
@@ -352,7 +355,7 @@ int main(void) {
       (void)free(keytab);
       (void)free(keytab_dirname);
       (void)free(keytab_filename);
-      return 1;
+      exit(EXIT_FAILURE);
     }
 
     filedescriptor = openat(dirfd(keytab_dir), keytab_filename, O_WRONLY|O_CREAT, _0600);
@@ -374,7 +377,7 @@ int main(void) {
       (void)free(keytab);
       (void)free(keytab_dirname);
       (void)free(keytab_filename);
-      return 1;
+      exit(EXIT_FAILURE);
     }
 
     if (!S_ISREG(st.st_mode)) {
@@ -383,7 +386,7 @@ int main(void) {
       (void)free(keytab);
       (void)free(keytab_dirname);
       (void)free(keytab_filename);
-      return 1;
+      exit(EXIT_FAILURE);
     }
 
     if (write_empty_keytab(filedescriptor) != 0) {
