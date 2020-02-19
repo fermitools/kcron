@@ -68,6 +68,16 @@ int disable_capabilities(void) {
   return 0;
 }
 
+static void print_cap_error(const char *mode, const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull (1))) __attribute__((flatten));
+static void print_cap_error(const char *mode, const cap_value_t expected_cap[], const int num_caps) {
+    (void)fprintf(stderr, "%s: Unable to set CAPABILITIES %s\n", __PROGRAM_NAME, mode);
+    (void)fprintf(stderr, "%s: Requested CAPABILITIES %s %i:\n", __PROGRAM_NAME, mode, num_caps);
+    for(int i=0; i < num_caps; i++) {
+        (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
+    }
+}
+
+
 int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten));
 int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
   cap_t capabilities;
@@ -84,12 +94,7 @@ int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 1);
     (void)cap_free(capabilities);
     /* error */
-    (void)fprintf(stderr, "%s: Unable to set CAPABILITIES PERMITTED\n", __PROGRAM_NAME);
-    (void)fprintf(stderr, "%s: Requested CAPABILITIES PERMITTED %i:\n", __PROGRAM_NAME, num_caps);
-    for(int i=0; i < num_caps; i++) {
-        (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
-    }
-
+    print_cap_error("PERMITTED", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 0);
@@ -98,12 +103,7 @@ int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 1);
     (void)cap_free(capabilities);
     /* error */
-    (void)fprintf(stderr, "%s: Unable to set CAPABILITIES EFFECTIVE\n", __PROGRAM_NAME);
-    (void)fprintf(stderr, "%s: Requested CAPABILITIES EFFECTIVE %i:\n", __PROGRAM_NAME, num_caps);
-    for(int i=0; i < num_caps; i++) {
-        (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
-    }
-
+    print_cap_error("ACTIVE", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 0);
@@ -112,12 +112,7 @@ int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 1);
     (void)cap_free(capabilities);
     /* error */
-    (void)fprintf(stderr, "%s: Unable to activate CAPABILITIES\n", __PROGRAM_NAME);
-    (void)fprintf(stderr, "%s: Requested CAPABILITIES to activate %i:\n", __PROGRAM_NAME, num_caps);
-    for(int i=0; i < num_caps; i++) {
-        (void)fprintf(stderr, "%s:    capability:%s\n", __PROGRAM_NAME, cap_to_name(expected_cap[i]));
-    }
-
+    print_cap_error("ACTIVE", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 0);
