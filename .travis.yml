@@ -1,0 +1,39 @@
+language: c
+
+compiler:
+- clang
+- gcc
+
+os:
+- linux
+
+script:
+- mkdir build
+- cd build 
+- cmake ..
+- make
+- make test
+
+install:
+    # Download and install recent cmake until cmake 3.14 is in the os
+    - |
+      if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
+        CMAKE_URL="http://www.cmake.org/files/v3.14/cmake-3.14.7-Linux-x86_64.tar.gz"
+        mkdir -p ~/cmake
+        travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ~/cmake
+        export PATH=~/cmake/bin:${PATH}
+      fi
+
+matrix:
+  allow_failures:
+  - compiler: clang
+
+addons:
+  apt:
+    packages:
+    - asciidoc
+    - cmake
+    - libcap-dev
+    - libkrb5-dev
+    - libseccomp-dev
+    - systemtap-sdt-dev
