@@ -1,11 +1,11 @@
 = kcron(1)
 
 == NAME
-kcron, kcroninit, kcrondestroy - Utilities getting Kerberos in scheduled jobs or daemons
+kcroninit, kcrondestroy - Utilities getting Kerberos in scheduled jobs or daemons
 
 == SYNOPSIS
 
-*kcroninit* creates a cron principal and extracts into a keytab to be used by kcron(1)
+*kcroninit* creates a cron principal and extracts into a keytab
 
 *kcrondestroy* destroys keytab and deletes cron principal created by kcroninit(1)
 
