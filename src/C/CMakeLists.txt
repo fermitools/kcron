@@ -96,7 +96,7 @@ CHECK_C_COMPILER_FLAG(-fasynchronous-unwind-tables UNWIND_TABLES)
 if (UNWIND_TABLES)
   add_compile_options(-fasynchronous-unwind-tables)
 else ()
-  message(WARNING "compile flag '-fasynchronous-unwind-tables' not found")
+  message(WARNING "Expected compile flag '-fasynchronous-unwind-tables' not found")
 endif (UNWIND_TABLES)
 
 #############################
@@ -105,7 +105,7 @@ CHECK_C_COMPILER_FLAG(-finline-functions INLINE_FUNCTIONS)
 if (INLINE_FUNCTIONS)
   add_compile_options(-finline-functions)
 else ()
-  message(WARNING "Required compile flag '-finline-functions' not found")
+  message(WARNING "Expected compile flag '-finline-functions' not found")
 endif (INLINE_FUNCTIONS)
 
 #############################
@@ -142,7 +142,7 @@ CHECK_C_COMPILER_FLAG(-fstack-clash-protection STACK_CLASH)
 if (STACK_CLASH)
   add_compile_options(-fstack-clash-protection)
 else ()
-  message(FATAL_ERROR "Required compile flag '-fstack-clash-protection' not found")
+  message(WARNING "Expected compile flag '-fstack-clash-protection' not found")
 endif (STACK_CLASH)
 
 CHECK_C_COMPILER_FLAG(-fstack-reuse=none STACK_REUSE)
@@ -163,14 +163,14 @@ CHECK_C_COMPILER_FLAG(-mcet MCET)
 if (MCET)
   add_compile_options(-mcet)
 else ()
-  message(WARNING "compile flag '-mcet' not found")
+  message(WARNING "Expected compile flag '-mcet' not found")
 endif (MCET)
 
 CHECK_C_COMPILER_FLAG(-fcf-protection FCF_PROTECT)
 if (FCF_PROTECT)
   add_compile_options(-fcf-protection)
 else ()
-  message(WARNING "compile flag '-fcf-protection' not found")
+  message(WARNING "Expected compile flag '-fcf-protection' not found")
 endif (FCF_PROTECT)
 
 #############################
@@ -220,6 +220,7 @@ set(IgnoreMe "${BUILD_SHARED_LIBS}${CMAKE_CXX_FLAGS_RELEASE}${CMAKE_C_FLAGS_RELE
 add_custom_target(cppcheck cppcheck --xml --xml-version=2 --enable=all ${PROJECT_SOURCE_DIR}/src/ 2>${PROJECT_BINARY_DIR}/cppcheck.xml COMMAND mkdir ${PROJECT_BINARY_DIR}/cppcheck COMMAND cppcheck-htmlreport --source-dir=${PROJECT_SOURCE_DIR}/src/ --title=kcron --file=${PROJECT_BINARY_DIR}/cppcheck.xml --report-dir=${PROJECT_BINARY_DIR}/cppcheck)
 
 #############################
+## Sometimes you want to trace cmake, here is my cheat sheet
 # cmake_print_variables(MY_VARIABLE)
 # cmake_print_properties( TARGETS my_target PROPERTIES POSITION_INDEPENDENT_CODE)
 # cmake -S . -B build --trace-expand --trace-source=CMakeLists.txt

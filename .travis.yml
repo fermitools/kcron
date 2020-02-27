@@ -34,6 +34,5 @@ addons:
     - asciidoc
     - cmake
     - libcap-dev
-    - libkrb5-dev
     - libseccomp-dev
     - systemtap-sdt-dev
