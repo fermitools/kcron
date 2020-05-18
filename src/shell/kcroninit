@@ -156,7 +156,6 @@ export KRB5CCNAME=KEYRING:session:${MYUID}:${SCRAMBLE}
 #           Can write to keytab? 
 ###########################################################
 echo " "
-echo "Checking permissions for ${KEYTABDIR} ..."
 KEYTAB=$(${KEYTAB_INIT})
 if [[ $? -ne 0 ]]; then
     exit 2
