@@ -274,8 +274,16 @@ int chown_chmod_keytab(int filedescriptor, char *keytab) {
     return 1;
   }
 
+  /* I own it now, so no need for CAP_FOWNER here      */
+  /* ensure permissions are as expected on keytab file */
+  if (fchmod(filedescriptor, _0600) != 0) {
+    (void)disable_capabilities();
+    (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, _0600, keytab);
+    return 1;
+  }
+
   if (st.st_uid != uid || st.st_gid != gid) {
-    /* I don't own the file somehow... */
+    /* Set the right owner of our keytab */
 
     if (enable_capabilities(keytab_caps, num_caps) != 0) {
       (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
@@ -293,14 +301,6 @@ int chown_chmod_keytab(int filedescriptor, char *keytab) {
       (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
       return 1;
     }
-  }
-
-  /* I own it now, so no need for CAP_FOWNER here      */
-  /* ensure permissions are as expected on keytab file */
-  if (fchmod(filedescriptor, _0600) != 0) {
-    (void)disable_capabilities();
-    (void)fprintf(stderr, "%s: unable to chmod %o %s\n", __PROGRAM_NAME, _0600, keytab);
-    return 1;
   }
 
 
