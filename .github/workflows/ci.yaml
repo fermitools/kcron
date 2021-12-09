@@ -1,0 +1,33 @@
+---
+name: Run CI
+on:
+  push:
+    branches:
+      - "**" # matches every branch
+      - "!gh-pages" # excludes gh-pages branch
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    name: Test compile
+
+    steps:
+      - name: checkout code tree
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: install dependencies
+        run: sudo apt-get install -y libcap-dev libseccomp-dev systemtap-sdt-dev asciidoc
+
+      - name: run build
+        run: |
+          mkdir build;
+          cd build;
+          cmake ..;
+          make;
+          make test;

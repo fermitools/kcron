@@ -7,12 +7,18 @@ It requires changes to KDC configuration. Provided KDC is properly configured, a
 
 This utility can also be used to run scheduled jobs under any local account `username`, even if principal `username@REALM` does not exist. This is especially useful if local account `username` is accessed by multiple users.
 
-Kerberos administrator will first create principal `username/cron/host.domain@REALM` and provide initial password to the requestor. The requestor can then run kcroninit utility to create the keytab.
+## User workflow
+
+Kerberos administrator will first create principal `username/cron/host.domain@REALM` and provide initial password to the requestor. The requestor can then run `kcroninit` utility to create the keytab.
+
+Run `kcroninit` to generate your kcron keytab (in `/var/kerberos/krb5/user/${EUID}/client.keytab`) once your principal exists and you have the required password.
 
 When your user/job/daemon requires a Kerberos ticket but does not have one, the Kerberos libraries will automatically import the ticket.
 The identity is selected based on either `~/.k5identity` or `slot 1` from your kcron keytab (in `/var/kerberos/krb5/user/${EUID}/client.keytab` following the traditional `kinit -kt` matching rules).
 
 Runtime usage is automatic if you do not have a valid Kerberos ticket.
+
+Setup your cron job following traditional cron rules.  A `kcron` prefix command is no longer required.
 
 ## Changes to KDC configuration
  Add the following line to kadm5.acl file on your KDC
