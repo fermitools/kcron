@@ -12,7 +12,7 @@ Summary:	A utility for getting Kerberos credentials in scheduled jobs
 
 Group:		Fermilab
 License:	MIT
-URL:		https://github.com/scientificlinux/kcron
+URL:		https://github.com/fermitools/kcron
 Source0:	kcron.tar.gz
 
 Provides:	kcron
