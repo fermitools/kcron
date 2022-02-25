@@ -15,28 +15,28 @@ License:	MIT
 URL:		https://github.com/fermitools/kcron
 Source0:	kcron.tar.gz
 
-Provides:	kcron
-Provides:	fermilab-util_kcron
+Provides:	kcron = %{version}-%{release}
+Provides:	fermilab-util_kcron = %{version}-%{release}
 
 %if %{_hardened_build}
 BuildRequires: checksec openssl procps-ng
 %endif
 
 %if %{with libcap}
-BuildRequires:  libcap libcap-devel
+BuildRequires:	libcap libcap-devel
 %endif
 %if %{with systemtap}
-BuildRequires:  systemtap-sdt-devel
+BuildRequires:	systemtap-sdt-devel
 %endif
 %if %{with seccomp}
-BuildRequires:  libseccomp-devel
+BuildRequires:	libseccomp-devel
 %endif
 
 BuildRequires:	cmake >= 3.14
-BuildRequires:  asciidoc redhat-rpm-config coreutils bash gcc
+BuildRequires:	asciidoc redhat-rpm-config coreutils bash gcc
 
-Requires:       krb5-workstation >= 1.11
-Requires:       util-linux coreutils
+Requires:	krb5-workstation >= 1.11
+Requires:	util-linux coreutils
 
 
 %description
@@ -78,9 +78,6 @@ make VERBOSE=2 %{?_smp_mflags}
 cd build
 make install DESTDIR=%{buildroot}
 
-
-%clean
-rm -rf %{buildroot}
 
 %check
 for code in $(ls %{buildroot}%{_bindir}); do
