@@ -93,19 +93,6 @@ fi
 
 %if %{_hardened_build}
 for code in $(ls %{buildroot}%{_libexecdir}/kcron); do
-    %if (0%{?rhel} && (0%{?rhel} < 9))
-    checksec --file %{buildroot}%{_libexecdir}/kcron/${code}
-    if [[ $? -ne 0 ]]; then
-      exit 1
-    fi
-
-    checksec --fortify-file %{buildroot}%{_libexecdir}/kcron/${code}
-    if [[ $? -ne 0 ]]; then
-      exit 1
-    fi
-
-    %else
-
     checksec --file=%{buildroot}%{_libexecdir}/kcron/${code}
     if [[ $? -ne 0 ]]; then
       exit 1
@@ -115,9 +102,9 @@ for code in $(ls %{buildroot}%{_libexecdir}/kcron); do
     if [[ $? -ne 0 ]]; then
       exit 1
     fi
-    %endif
 done
 %endif
+
 
 %files
 %defattr(0644,root,root,0755)
