@@ -46,11 +46,14 @@ for running daemons and automatic jobs with kerberos rights.
 
 %prep
 %setup -q -n kcron
-mkdir build
 
 
 %build
+%if 0%{?rhel} < 8 && 0%{?fedora} < 31
+mkdir build
 cd build
+%endif
+
 %cmake3 -Wdev \
 %if %{with libcap}
  -DUSE_CAPABILITIES=ON \
@@ -71,12 +74,20 @@ cd build
  -DCMAKE_RULE_MESSAGES:BOOL=ON \
  -Wdeprecated ..
 
+%if 0%{?rhel} < 8 && 0%{?fedora} < 31
 make VERBOSE=2 %{?_smp_mflags}
+%else
+%cmake_build
+%endif
 
 
 %install
+%if 0%{?rhel} < 8 && 0%{?fedora} < 31
 cd build
 make install DESTDIR=%{buildroot}
+%else
+%cmake_install
+%endif
 
 
 %check
