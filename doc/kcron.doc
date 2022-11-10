@@ -17,6 +17,19 @@ The *kcrondestroy* utility destroys the kerberos principal of the form +username
 
 After you've run the kcroninit(1) utility Kerberos will begin using this keytab when any current tickets expire.  You can force this behavior by running KDESTROY(1) on your ticket cache now.
 
+=== WORKFLOW
+
+Kerberos administrator will first create principal +username/cron/host.domain@REALM+ and provide initial password to the requestor. The requestor can then run +kcroninit+ utility to create the keytab.
+
+Run +kcroninit+ to generate your kcron keytab (in +/var/kerberos/krb5/user/${EUID}/client.keytab+) once your principal exists and you have the required password.
+
+When your user/job/daemon requires a Kerberos ticket but does not have one, the Kerberos libraries will automatically import the ticket.
+The identity is selected based on either +~/.k5identity+ or +slot 1+ from your kcron keytab (in +/var/kerberos/krb5/user/${EUID}/client.keytab+ following the traditional +kinit -kt+ matching rules).
+
+Runtime usage is automatic if you do not have a valid Kerberos ticket.
+
+Setup your cron job following traditional cron rules.  A +kcron+ prefix command is no longer required.
+
 === kcroninit
 
 Accepts no arguments
