@@ -55,12 +55,13 @@ destroy() {
 
 ADMPRINCIPAL=${WHOAMI}
 if [[ $# -ne 0 ]]; then
-    args=$(getopt -o sh)
-    if [[ $? -ne 0 ]]; then
+    if ! args=$(getopt -o sh); then
         usage
     fi
-    for arg in $args; do
-        case $arg in
+
+    eval set -- "$args"
+    for _ in "$@"; do
+        case $1 in
 
         --)
             break 2
@@ -158,8 +159,7 @@ export KRB5CCNAME="KEYRING:session:${MYUID}:${SCRAMBLE}"
 #           Can write to keytab?
 ###########################################################
 echo ''
-KEYTAB=$(${KEYTAB_INIT})
-if [[ $? -ne 0 ]]; then
+if ! KEYTAB=$(${KEYTAB_INIT}); then
     exit 2
 fi
 

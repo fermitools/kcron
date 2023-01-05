@@ -49,7 +49,7 @@ destroy() {
 echo ''
 echo 'WARNING!!!'
 echo "kcrondestroy WILL REMOVE principal ${FULLPRINCIPAL} from Kerberos realm ${REALM}"
-echo "and DELETE  keytab ${KEYTAB}."
+echo "and DELETE keytab ${KEYTAB}."
 echo 'This principal is used by the kcron utility for authentication.'
 echo ''
 echo ''
