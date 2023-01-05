@@ -2,10 +2,10 @@
 
 ###########################################################
 if [[ -r /etc/sysconfig/kcron ]]; then
-  source /etc/sysconfig/kcron
+    source /etc/sysconfig/kcron
 fi
 if [[ -r ~/.config/kcron ]]; then
-  source ~/.config/kcron
+    source ~/.config/kcron
 fi
 
 ###########################################################
@@ -24,14 +24,14 @@ fi
 #               Functions
 ###########################################################
 usage() {
-    echo ''   >&2
+    echo '' >&2
     echo "$0" >&2
     echo "  The kcrondestroy utility deletes principal of the form" >&2
-    echo "  username/cron/host.domain@REALM from Kerberos realm. "  >&2
-    echo ''   >&2
+    echo "  username/cron/host.domain@REALM from Kerberos realm. " >&2
+    echo '' >&2
     echo '  Most values are sourced from /etc/sysconfig/kcron' >&2
-    echo '  or ~/.config/kcron'                                >&2
-    echo ''   >&2
+    echo '  or ~/.config/kcron' >&2
+    echo '' >&2
     exit 1
 }
 
@@ -39,12 +39,12 @@ usage() {
 destroy() {
     # Destroy credential cache
     ${DESTROY_CACHE}
-    echo " "
+    echo ''
     echo DESTROYED administration credentials.
 }
 
 ###########################################################
-#           CONFIRM 
+#           CONFIRM
 ###########################################################
 echo ''
 echo 'WARNING!!!'
@@ -56,41 +56,45 @@ echo ''
 while true; do
     read -r -p 'Do you want to continue? (y/n)' yn
     case ${yn} in
-        [Yy]* ) break;;
-        [Nn]* ) exit;;
-        * ) echo 'Please answer yes or no.';;
+    [Yy]*) break ;;
+    [Nn]*) exit ;;
+    *)
+        echo "Please answer 'y' or 'n'."
+        exit
+        ;;
+
     esac
 done
 
 ###########################################################
-#           Check if Kerberos utilities are installed 
+#           Check if Kerberos utilities are installed
 ###########################################################
-if ! which kadmin >/dev/null 2>&1 ; then
-    echo " "
+if ! which kadmin >/dev/null 2>&1; then
+    echo ''
     echo "Could not find 'kadmin'" >&2
     echo "Consider installing krb5-workstation" >&2
     exit 2
 fi
 if ! which kinit >/dev/null 2>&1; then
-    echo " "
+    echo ''
     echo "Could not find 'kinit'" >&2
     echo "Consider installing krb5-workstation" >&2
     exit 2
 fi
 if ! which logger >/dev/null 2>&1; then
-    echo " "
+    echo ''
     echo "Could not find 'logger'" >&2
     echo "Consider installing util-linux" >&2
     exit 2
 fi
 if ! which md5sum >/dev/null 2>&1; then
-    echo " "
+    echo ''
     echo "Could not find 'md5sum'" >&2
     echo "Consider installing coreutils" >&2
     exit 2
 fi
 if ! which id >/dev/null 2>&1; then
-    echo " "
+    echo ''
     echo "Could not find 'id'" >&2
     echo "Consider installing coreutils" >&2
     exit 2
@@ -104,44 +108,45 @@ DESTROY_CACHE=$(which kdestroy)
 #           SET UP CREDENTIAL CACHE
 ###########################################################
 # In order to ask for password once need to obtain a ticket for kadmin/admin service
-# Use temporary unique credential cache, which will be destroyed when kcron finishes. 
-# KEYRING format must be 
+# Use temporary unique credential cache, which will be destroyed when kcron finishes.
+# KEYRING format must be
 # KEYRING:session:valid-uid:anything
-# Get uid for current user 
+# Get uid for current user
 MYUID=$(id -u "${WHOAMI}")
-SCRAMBLE=$(echo "$(date ; echo ${RANDOM})" | md5sum | /bin/cut -f1 -d" ")
+SCRAMBLE=$(echo "$(
+    date
+    echo ${RANDOM}
+)" | md5sum | /bin/cut -f1 -d" ")
 export KRB5CCNAME="KEYRING:session:${MYUID}:${SCRAMBLE}"
 
 ###########################################################
 #           Run
 ###########################################################
 # Get credentials for service kadmin/admin, user is prompted for password
-if ! ${kinit} -c "${KRB5CCNAME}" -S kadmin/admin  > /dev/null >&2; then
-    echo " "
+if ! ${kinit} -c "${KRB5CCNAME}" -S kadmin/admin >/dev/null >&2; then
+    echo ''
     echo "Failed to obtain initial credentials"
     exit 2
 fi
 
-
 # Check if principal is in Kerberos database.
-# I added  2> /dev/null to kadmin command to avoid message "Administration credentials NOT DESTROYED." 
 PRINCIPAL_EXIST=$(${kadmin} -p "${WHOAMI}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "get_principal ${FULLPRINCIPAL}" 2>/dev/null | grep "${FULLPRINCIPAL}")
 # For if does not exist, there is nothing to do
-if [[ "${PRINCIPAL_EXIST}" == '' ]]; then
+if [[ ${PRINCIPAL_EXIST} == '' ]]; then
     echo "Principal ${FULLPRINCIPAL} does not exist in Kerbreros ream ${REALM}"
     echo 'NOTHING TO DO!'
     destroy
     exit 0
 else
     # Remove principal
-    ${kadmin} -p "${WHOAMI}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "delete_principal -force ${FULLPRINCIPAL}" 2>/dev/null 
+    ${kadmin} -p "${WHOAMI}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "delete_principal -force ${FULLPRINCIPAL}" 2>/dev/null
     # Check if it is still there
     PRINCIPAL_EXIST=$(${kadmin} -p "${WHOAMI}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "get_principal ${FULLPRINCIPAL}" 2>/dev/null | grep "${FULLPRINCIPAL}")
-    if [[ "${PRINCIPAL_EXIST}" != '' ]]; then
-	echo " "
-	echo "Cannot delete principal ${FULLPRINCIPAL} in realm ${REALM}."
-	destroy
-	exit 2
+    if [[ ${PRINCIPAL_EXIST} != '' ]]; then
+        echo ''
+        echo "Cannot delete principal ${FULLPRINCIPAL} in realm ${REALM}."
+        destroy
+        exit 2
     fi
     destroy
 fi
