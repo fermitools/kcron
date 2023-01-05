@@ -4,6 +4,9 @@
 if [[ -r /etc/sysconfig/kcron ]]; then
   source /etc/sysconfig/kcron
 fi
+if [[ -r ~/.config/kcron ]]; then
+  source ~/.config/kcron
+fi
 
 ###########################################################
 #
@@ -21,10 +24,15 @@ fi
 #        Functions
 ###########################################################
 usage() {
-    echo "  The kcroninit utility creates a new principal of the form"       >&2
-    echo "  username/cron/host.domain@REALM  and then creates a keytab"      >&2
-    echo "  file that can be used by the kcron utility for authentication. " >&2
-    echo ''                                    >&2
+    echo ''   >&2
+    echo "$0" >&2
+    echo '  The kcroninit utility creates a new principal of the form'       >&2
+    echo '  username/cron/host.domain@REALM  and then creates a keytab'      >&2
+    echo '  file that can be used by the kcron utility for authentication.'  >&2
+    echo ''   >&2
+    echo '  Most values are sourced from /etc/sysconfig/kcron' >&2
+    echo '  or ~/.config/kcron'                                >&2
+    echo ''   >&2
     exit 1
 }
 
@@ -32,13 +40,10 @@ usage() {
 destroy() {
     # Destroy credential cache
     ${DESTROY_CACHE}
-    echo " "
-    echo DESTROYED administration credentials.
+    echo ''
+    echo 'DESTROYED administration credentials.'
 }
 
-#if [[ $# -ne 0 ]]; then
-#    usage
-#fi
 ###########################################################
 #        Options
 ###########################################################
@@ -55,16 +60,16 @@ if [[ $# -ne 0 ]]; then
 	usage
     fi
     for arg in $args; do
-	case $1 in
+	case $arg in
 	    
             -- )
 		break 2
 		;;
             -s )
-		ADMPRINCIPAL=${WHOAMI}/cron/${NODENAME}
+		ADMPRINCIPAL="${WHOAMI}/cron/${NODENAME}"
 		;;
             -h )
-            # get help
+                # get help
 		usage
 		;;
 	esac
@@ -78,7 +83,7 @@ echo "kcroninit creates principal ${FULLPRINCIPAL} and/or extracts its keys into
 echo "This principal is used by the kcron utility for authentication."
 echo "You need to know the password for ${ADMPRINCIPAL} to continue."
 while true; do
-    read -p "Do you want to continue? (y/n)" yn
+    read -r -p 'Do you want to continue? (y/n)' yn
     case ${yn} in
         [Yy]* ) break;;
         [Nn]* ) exit;;
@@ -89,56 +94,47 @@ done
 ###########################################################
 #           Check if Kerberos utilities are installed 
 ###########################################################
-
-which kadmin >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which kadmin >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'kadmin'" >&2
     echo "Consider installing krb5-workstation" >&2
     exit 2
 fi
-which kinit >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which kinit >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'kinit'" >&2
     echo "Consider installing krb5-workstation" >&2
     exit 2
 fi
-which klist >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which klist >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'klist'" >&2
     echo "Consider installing krb5-workstation" >&2
     exit 2
 fi
-which logger >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which logger >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'logger'" >&2
     echo "Consider installing util-linux" >&2
     exit 2
 fi
-which md5sum >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which md5sum >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'md5sum'" >&2
     echo "Consider installing coreutils" >&2
     exit 2
 fi
-which id >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which id >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'id'" >&2
     echo "Consider installing coreutils" >&2
     exit 2
 fi
 
-
 kadmin=$(which kadmin)
 kinit=$(which kinit)
 klist=$(which klist)
 DESTROY_CACHE=$(which kdestroy)
-
 
 ###########################################################
 #           SET UP CREDENTIAL CACHE
@@ -148,9 +144,9 @@ DESTROY_CACHE=$(which kdestroy)
 # KEYRING format must be 
 # KEYRING:session:valid-uid:anything
 # Get uid for current user 
-MYUID=$(id -u ${WHOAMI})
-SCRAMBLE=$(echo $(date ; echo ${RANDOM}) | md5sum | /bin/cut -f1 -d" ")
-export KRB5CCNAME=KEYRING:session:${MYUID}:${SCRAMBLE}
+MYUID=$(id -u "${WHOAMI}")
+SCRAMBLE=$(echo "$(date ; echo ${RANDOM})" | md5sum | /bin/cut -f1 -d" ")
+export KRB5CCNAME="KEYRING:session:${MYUID}:${SCRAMBLE}"
 
 ###########################################################
 #           Can write to keytab? 
@@ -164,11 +160,9 @@ fi
 ###########################################################
 #           Run
 ###########################################################
-
 # Obtain credentials
 echo " "
-${kinit} -c ${KRB5CCNAME} -S kadmin/admin  ${ADMPRINCIPAL}@${REALM} >/dev/null >&2
-if [ $? != 0 ]; then
+if ! ${kinit} -c "${KRB5CCNAME}" -S kadmin/admin "${ADMPRINCIPAL}@${REALM}" >/dev/null >&2; then
     echo " "
     echo "Failed to obtain initial credentials. Exiting..."
     destroy
@@ -179,22 +173,22 @@ fi
 # Check if principal is in Kerberos database.
 # I added  2> /dev/null to kadmin command to avoid message "Administration credentials NOT DESTROYED." 
 
-PRINCIPAL_EXIST=$(${kadmin} -p ${ADMPRINCIPAL}@${REALM} -c ${KRB5CCNAME} -r ${REALM} -q "get_principal ${FULLPRINCIPAL}"  2> /dev/null | grep ${FULLPRINCIPAL})
-echo ${PRINCIPAL_EXIST}
+PRINCIPAL_EXIST=$(${kadmin} -p "${ADMPRINCIPAL}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "get_principal ${FULLPRINCIPAL}" 2>/dev/null | grep "${FULLPRINCIPAL}")
+echo "${PRINCIPAL_EXIST}"
 
 # Skip create for existing principals, create otherwise
 
-if [ "${PRINCIPAL_EXIST}" != '' ]; then
+if [[ "${PRINCIPAL_EXIST}" != '' ]]; then
 	echo " "
 	echo "Principal ${FULLPRINCIPAL} already exists in Kerberos database."
 else
     echo "Creating principal..."
     # Create principal
-    ${kadmin} -p ${ADMPRINCIPAL}@${REALM} -c ${KRB5CCNAME} -r ${REALM} -q "add_principal -randkey -pwexpire never ${FULLPRINCIPAL}" 2> /dev/null
+    ${kadmin} -p "${ADMPRINCIPAL}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "add_principal -randkey -pwexpire never ${FULLPRINCIPAL}" 2>/dev/null
     
     # Check if created successfully
-    PRINCIPAL_EXIST=$(${kadmin} -p ${ADMPRINCIPAL}@${REALM} -c ${KRB5CCNAME} -r ${REALM} -q "get_principal ${FULLPRINCIPAL}"  2> /dev/null | grep ${FULLPRINCIPAL})
-    if [ "${PRINCIPAL_EXIST}" == '' ]; then
+    PRINCIPAL_EXIST=$(${kadmin} -p "${ADMPRINCIPAL}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "get_principal ${FULLPRINCIPAL}" 2>/dev/null | grep "${FULLPRINCIPAL}")
+    if [[ "${PRINCIPAL_EXIST}" == '' ]]; then
 	echo " "
 	echo "Cannot create principal ${FULLPRINCIPAL} in realm ${REALM}. Exiting..."
 	destroy
@@ -205,17 +199,17 @@ fi
        
 # Extract keytab
 echo "Extracting keytab..."
-${kadmin} -p ${ADMPRINCIPAL}@${REALM} -c ${KRB5CCNAME} -r ${REALM} -q "ktadd -k ${KEYTAB} ${FULLPRINCIPAL}"  2> /dev/null
+${kadmin} -p "${ADMPRINCIPAL}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "ktadd -k ${KEYTAB} ${FULLPRINCIPAL}" 2>/dev/null
 # Verify
-PRINCIPAL_IN_KEYTAB=$(${klist} -k ${KEYTAB} | grep ${FULLPRINCIPAL})
-if [ "${PRINCIPAL_IN_KEYTAB}" == '' ]; then
+PRINCIPAL_IN_KEYTAB=$(${klist} -k "${KEYTAB}" | grep "${FULLPRINCIPAL}")
+if [[ "${PRINCIPAL_IN_KEYTAB}" == '' ]]; then
 	echo " "
 	echo "Unable to extract ${FULLPRINCIPAL} keys into keytab ${KEYTAB}. Exiting..."
     exit 2
 else
 	echo " "
 	echo "Created keytab ${KEYTAB} "
-	${klist} -k ${KEYTAB} | grep ${FULLPRINCIPAL}
+	${klist} -k "${KEYTAB}" | grep "${FULLPRINCIPAL}"
 
 fi
 

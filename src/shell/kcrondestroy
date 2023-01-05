@@ -4,6 +4,9 @@
 if [[ -r /etc/sysconfig/kcron ]]; then
   source /etc/sysconfig/kcron
 fi
+if [[ -r ~/.config/kcron ]]; then
+  source ~/.config/kcron
+fi
 
 ###########################################################
 #
@@ -21,15 +24,16 @@ fi
 #               Functions
 ###########################################################
 usage() {
-    echo ''           >&2
-    echo "$0 [-n nodename] [-i identity]"         >&2
-    echo "  The kcrondestroy utility deletes principal of the form"       >&2
-    echo "  username/cron/host.domain@REALM from Kerberos realm. "      >&2
-    echo "  " >&2
-    echo ''                                    >&2
+    echo ''   >&2
+    echo "$0" >&2
+    echo "  The kcrondestroy utility deletes principal of the form" >&2
+    echo "  username/cron/host.domain@REALM from Kerberos realm. "  >&2
+    echo ''   >&2
+    echo '  Most values are sourced from /etc/sysconfig/kcron' >&2
+    echo '  or ~/.config/kcron'                                >&2
+    echo ''   >&2
     exit 1
 }
-
 
 ###########################################################
 destroy() {
@@ -39,70 +43,53 @@ destroy() {
     echo DESTROYED administration credentials.
 }
 
-
-if [[ $? -ne 0 ]]; then
-    usage
-fi
 ###########################################################
 #           CONFIRM 
 ###########################################################
-echo " "
-echo "WARNING!!!"
+echo ''
+echo 'WARNING!!!'
 echo "kcrondestroy WILL REMOVE principal ${FULLPRINCIPAL} from Kerberos realm ${REALM}"
 echo "and DELETE  keytab ${KEYTAB}."
-echo "This principal is used by the kcron utility for authentication."
-echo " "
-echo " "
+echo 'This principal is used by the kcron utility for authentication.'
+echo ''
+echo ''
 while true; do
-    read -p "Do you want to continue? (y/n)" yn
+    read -r -p 'Do you want to continue? (y/n)' yn
     case ${yn} in
         [Yy]* ) break;;
         [Nn]* ) exit;;
-        * ) echo "Please answer yes or no.";;
+        * ) echo 'Please answer yes or no.';;
     esac
 done
 
 ###########################################################
 #           Check if Kerberos utilities are installed 
 ###########################################################
-
-which kadmin >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which kadmin >/dev/null 2>&1 ; then
     echo " "
     echo "Could not find 'kadmin'" >&2
     echo "Consider installing krb5-workstation" >&2
     exit 2
 fi
-which kinit >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which kinit >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'kinit'" >&2
     echo "Consider installing krb5-workstation" >&2
     exit 2
 fi
-which klist >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
-    echo " "
-    echo "Could not find 'klist'" >&2
-    echo "Consider installing krb5-workstation" >&2
-    exit 2
-fi
-which logger >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which logger >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'logger'" >&2
     echo "Consider installing util-linux" >&2
     exit 2
 fi
-which md5sum >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which md5sum >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'md5sum'" >&2
     echo "Consider installing coreutils" >&2
     exit 2
 fi
-which id >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+if ! which id >/dev/null 2>&1; then
     echo " "
     echo "Could not find 'id'" >&2
     echo "Consider installing coreutils" >&2
@@ -111,7 +98,6 @@ fi
 
 kadmin=$(which kadmin)
 kinit=$(which kinit)
-klist=$(which klist)    
 DESTROY_CACHE=$(which kdestroy)
 
 ###########################################################
@@ -122,17 +108,15 @@ DESTROY_CACHE=$(which kdestroy)
 # KEYRING format must be 
 # KEYRING:session:valid-uid:anything
 # Get uid for current user 
-MYUID=$(id -u ${WHOAMI})
-SCRAMBLE=$(echo $(date ; echo ${RANDOM}) | md5sum | /bin/cut -f1 -d" ")
-export KRB5CCNAME=KEYRING:session:${MYUID}:${SCRAMBLE}
-
+MYUID=$(id -u "${WHOAMI}")
+SCRAMBLE=$(echo "$(date ; echo ${RANDOM})" | md5sum | /bin/cut -f1 -d" ")
+export KRB5CCNAME="KEYRING:session:${MYUID}:${SCRAMBLE}"
 
 ###########################################################
 #           Run
 ###########################################################
 # Get credentials for service kadmin/admin, user is prompted for password
-${kinit} -c ${KRB5CCNAME} -S kadmin/admin  > /dev/null >&2
-if [ $? != 0 ]; then
+if ! ${kinit} -c "${KRB5CCNAME}" -S kadmin/admin  > /dev/null >&2; then
     echo " "
     echo "Failed to obtain initial credentials"
     exit 2
@@ -141,21 +125,19 @@ fi
 
 # Check if principal is in Kerberos database.
 # I added  2> /dev/null to kadmin command to avoid message "Administration credentials NOT DESTROYED." 
-
-PRINCIPAL_EXIST=$(${kadmin} -p ${WHOAMI}@${REALM} -c ${KRB5CCNAME} -r ${REALM} -q "get_principal ${FULLPRINCIPAL}"  2> /dev/null | grep ${FULLPRINCIPAL})
+PRINCIPAL_EXIST=$(${kadmin} -p "${WHOAMI}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "get_principal ${FULLPRINCIPAL}" 2>/dev/null | grep "${FULLPRINCIPAL}")
 # For if does not exist, there is nothing to do
-if [ "${PRINCIPAL_EXIST}" == '' ]; then
-    echo Principal ${FULLPRINCIPAL} does not exist in Kerbreros ream ${REALM}
-    echo NOTHING TO DO!
+if [[ "${PRINCIPAL_EXIST}" == '' ]]; then
+    echo "Principal ${FULLPRINCIPAL} does not exist in Kerbreros ream ${REALM}"
+    echo 'NOTHING TO DO!'
     destroy
     exit 0
 else
-   
     # Remove principal
-    ${kadmin} -p ${WHOAMI}@${REALM} -c ${KRB5CCNAME} -r ${REALM} -q "delete_principal -force ${FULLPRINCIPAL}" 2> /dev/null 
+    ${kadmin} -p "${WHOAMI}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "delete_principal -force ${FULLPRINCIPAL}" 2>/dev/null 
     # Check if it is still there
-    PRINCIPAL_EXIST=$(${kadmin} -p ${WHOAMI}@${REALM} -c ${KRB5CCNAME} -r ${REALM} -q "get_principal ${FULLPRINCIPAL}" 2> /dev/null | grep ${FULLPRINCIPAL})
-    if [ "${PRINCIPAL_EXIST}" != '' ]; then
+    PRINCIPAL_EXIST=$(${kadmin} -p "${WHOAMI}@${REALM}" -c "${KRB5CCNAME}" -r "${REALM}" -q "get_principal ${FULLPRINCIPAL}" 2>/dev/null | grep "${FULLPRINCIPAL}")
+    if [[ "${PRINCIPAL_EXIST}" != '' ]]; then
 	echo " "
 	echo "Cannot delete principal ${FULLPRINCIPAL} in realm ${REALM}."
 	destroy
@@ -165,7 +147,6 @@ else
 fi
 
 # Remove keytab file if exist
-rm -f $(KEYTAB_NAME_UTIL)
-if [[ $? -eq 0 ]]; then
-    echo SUCCESS!
+if ! rm -f "$(KEYTAB_NAME_UTIL)"; then
+    echo "SUCCESS!"
 fi
