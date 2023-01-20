@@ -11,3 +11,5 @@ sources:
 srpm: sources
 	@echo "You found my copr hook"
 	rpmbuild -bs --define '_sourcedir .' --define '_srcrpmdir .' fermilab-util_kcron.spec
+rpm: sources
+	rpmbuild -bb --define '_sourcedir .' --define '_srcrpmdir .' fermilab-util_kcron.spec
