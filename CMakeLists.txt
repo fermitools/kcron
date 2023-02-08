@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.11)
 
-project(kcron)
+project(kcron C)
 
 set(LANGUAGES "C")
 
