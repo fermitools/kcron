@@ -88,7 +88,7 @@ endif(IPO_RESULT)
 
 #############################
 # Add required warnings level
-add_compile_options(-Wall -Wpedantic -Wconversion -Wformat -Wformat-security -Wstrict-prototypes -Wstrict-overflow -Wextra -Werror)
+add_compile_options(-Wall -Wpedantic -Wconversion -Wformat -Wformat-security -Wstrict-prototypes -Wstrict-overflow -Werror=implicit-function-declaration -Wextra -Werror)
 
 #############################
 # Permit sound debugging tables
@@ -107,6 +107,23 @@ if (INLINE_FUNCTIONS)
 else ()
   message(WARNING "Expected compile flag '-finline-functions' not found")
 endif (INLINE_FUNCTIONS)
+
+#############################
+# Annotate binaries
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  CHECK_C_COMPILER_FLAG(-fplugin=annobin SET_ANNOBIN)
+  if (SET_ANNOBIN)
+    add_compile_options(-fplugin=annobin)
+  else ()
+    message(WARNING "Expected compile flag '-fplugin=annobin' not found")
+  endif (SET_ANNOBIN)
+  CHECK_C_COMPILER_FLAG(-grecord-gcc-switches SET_GCC_SWITCHES)
+  if (SET_GCC_SWITCHES)
+    add_compile_options(-grecord-gcc-switches)
+  else ()
+    message(WARNING "Expected compile flag '-grecord-gcc-switches' not found")
+  endif (SET_GCC_SWITCHES)
+endif (CMAKE_C_COMPILER_ID)
 
 #############################
 # Ensure the linker is hardened
@@ -166,11 +183,11 @@ else ()
   message(WARNING "Expected compile flag '-mcet' not found")
 endif (MCET)
 
-CHECK_C_COMPILER_FLAG(-fcf-protection FCF_PROTECT)
+CHECK_C_COMPILER_FLAG(-fcf-protection=full FCF_PROTECT)
 if (FCF_PROTECT)
-  add_compile_options(-fcf-protection)
+  add_compile_options(-fcf-protection=full)
 else ()
-  message(WARNING "Expected compile flag '-fcf-protection' not found")
+  message(WARNING "Expected compile flag '-fcf-protection=full' not found")
 endif (FCF_PROTECT)
 
 #############################
