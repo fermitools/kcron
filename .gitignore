@@ -1,3 +1,5 @@
 build/
 kcron.tar.gz
 *.swp
+RPMS
+SRPMS
