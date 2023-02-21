@@ -49,7 +49,7 @@ for running daemons and automatic jobs with kerberos rights.
 
 
 %build
-%if 0%{?rhel} < 8 && 0%{?fedora} < 31
+%if 0%{?rhel} < 9 && 0%{?fedora} < 31
 mkdir build
 cd build
 %endif
@@ -82,7 +82,7 @@ make VERBOSE=2 %{?_smp_mflags}
 
 
 %install
-%if 0%{?rhel} < 8 && 0%{?fedora} < 31
+%if 0%{?rhel} < 9 && 0%{?fedora} < 31
 cd build
 make install DESTDIR=%{buildroot}
 %else
