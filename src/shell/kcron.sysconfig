@@ -5,7 +5,7 @@
 KRB5_CONFIG=${KRB5_CONFIG:-'/etc/krb5.conf'}
 KRB5_CONF_D=${KRB5_CONF_D:-'/etc/krb5.conf.d/*'}
 
-DEFAULT_REALM=$(grep default_realm "${KRB5_CONFIG}" "${KRB5_CONF_D}" 2>/dev/null | grep -v \# | cut -d '=' -f2 | tail -1 | tr -d ' ')
+DEFAULT_REALM=$(grep default_realm ${KRB5_CONFIG} ${KRB5_CONF_D} 2>/dev/null | grep -v \# | cut -d '=' -f2 | tail -1 | tr -d ' ')
 REALM=${KCRON_REALM:-${DEFAULT_REALM}}
 
 WHOAMI=${KCRON_WHOAMI:-$(basename "$(whoami)")}
