@@ -176,19 +176,19 @@ else ()
   message(FATAL_ERROR "Required compile flag '-fstack-protector-all' not found")
 endif (STACK_PROTECT)
 
-CHECK_C_COMPILER_FLAG(-mcet MCET)
-if (MCET)
-  add_compile_options(-mcet)
-else ()
-  message(WARNING "Expected compile flag '-mcet' not found")
-endif (MCET)
-
 CHECK_C_COMPILER_FLAG(-fcf-protection=full FCF_PROTECT)
 if (FCF_PROTECT)
   add_compile_options(-fcf-protection=full)
 else ()
   message(WARNING "Expected compile flag '-fcf-protection=full' not found")
 endif (FCF_PROTECT)
+
+CHECK_C_COMPILER_FLAG(-mshstk SAFESTACK_SHADOW)
+if (FCF_PROTECT)
+  add_compile_options(-mshstk)
+else ()
+  message(WARNING "Expected compile flag '-mshstk' not found")
+endif (SAFESTACK_SHADOW)
 
 #############################
 # Our build targets

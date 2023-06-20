@@ -3,7 +3,7 @@ current_dir:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 _default:
 	@mkdir -p build
 	@echo "Perhaps you want:"
-	@echo "cd ./build && cmake .. && make && make test"
+	@echo "mkdir build ; cd ./build && cmake .. && make && make test"
 sources:
 	@echo "You found my koji hook"
 	@mkdir kcron
