@@ -1,4 +1,5 @@
 build/
+BUILD/
 kcron.tar.gz
 *.swp
 RPMS

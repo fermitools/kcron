@@ -15,4 +15,4 @@ srpm: sources
 	rpmbuild -bs --define '_sourcedir $(current_dir)' --define '_srcrpmdir $(current_dir)/SRPMS' fermilab-util_kcron.spec
 rpm: sources
 	@echo "You found my 'just build it' hook"
-	rpmbuild -bb --define '_rpmdir $(current_dir)/RPMS' --define '_builddir $(current_dir)' --define '_sourcedir $(current_dir)' fermilab-util_kcron.spec
+	rpmbuild -bb --define '_rpmdir $(current_dir)/RPMS' --define '_builddir $(current_dir)/BUILD' --define '_sourcedir $(current_dir)' fermilab-util_kcron.spec
