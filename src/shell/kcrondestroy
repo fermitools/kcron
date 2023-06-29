@@ -8,6 +8,7 @@ if [[ -r ~/.config/kcron ]]; then
     source ~/.config/kcron
 fi
 
+KEYTAB=$(${KEYTAB_NAME_UTIL})
 ###########################################################
 #
 # Copyright 2017 Fermi Research Alliance, LLC
@@ -152,6 +153,6 @@ else
 fi
 
 # Remove keytab file if exist
-if ! rm -f "$(KEYTAB_NAME_UTIL)"; then
+if ! rm -f "${KEYTAB}"; then
     echo "SUCCESS!"
 fi
