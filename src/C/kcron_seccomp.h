@@ -181,6 +181,11 @@ int set_kcron_seccomp(void) {
     seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(newfstatat), 0) != 0) {
+    (void)fprintf(stderr, "%s: Cannot set allowlist 'newfstatat'.\n", __PROGRAM_NAME);
+    seccomp_release(ctx);
+    exit(EXIT_FAILURE);
+  }
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(mkdir), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot set allowlist 'mkdir'.\n", __PROGRAM_NAME);
     seccomp_release(ctx);
