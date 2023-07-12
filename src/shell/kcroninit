@@ -78,7 +78,7 @@ if [[ $# -ne 0 ]]; then
 fi
 
 ###########################################################
-#           Check if Kerberos utilities are installed
+#        Check if Kerberos utilities are installed
 ###########################################################
 if ! which kadmin >/dev/null 2>&1; then
     echo ''
@@ -123,7 +123,7 @@ klist=$(which klist)
 DESTROY_CACHE=$(which kdestroy)
 
 ###########################################################
-#           CONFIRM
+#        CONFIRM
 ###########################################################
 echo "kcroninit creates principal ${FULLPRINCIPAL} and/or extracts its keys into a keytab."
 echo "This principal is used by the kcron utility for authentication."
@@ -141,7 +141,7 @@ while true; do
 done
 
 ###########################################################
-#           SET UP CREDENTIAL CACHE
+#        SET UP CREDENTIAL CACHE
 ###########################################################
 # In order to ask for password once need to obtain a ticket for kadmin/admin service
 # Use temporary unique credential cache, which will be destroyed when kcron finishes.
@@ -156,18 +156,19 @@ SCRAMBLE=$(echo "$(
 export KRB5CCNAME="KEYRING:session:${MYUID}:${SCRAMBLE}"
 
 ###########################################################
-#           Can write to keytab?
+#        Can I write to the keytab?
 ###########################################################
-echo 'Is keytab writable?'
+echo 'Is the keytab writable?'
 if ! KEYTAB=$(${KEYTAB_INIT}); then
     echo ''
     echo 'Keytab is not writable to this user:' >&2
     id >&2
+    ls -l ${KEYTAB} >&2
     exit 2
 fi
 
 ###########################################################
-#           Run
+#        Run
 ###########################################################
 # Obtain credentials
 echo 'Trying to obtain initial credentials'
