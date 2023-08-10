@@ -6,8 +6,8 @@
 
 Name:		fermilab-util_kcron
 
-Version:	1.4
-Release:	2%{?dist}
+Version:	1.5
+Release:	1%{?dist}
 Summary:	A utility for getting Kerberos credentials in scheduled jobs
 
 Group:		Fermilab
@@ -49,7 +49,7 @@ for running daemons and automatic jobs with kerberos rights.
 
 
 %build
-%if 0%{?rhel} < 8 && 0%{?fedora} < 31
+%if 0%{?rhel} < 9 && 0%{?fedora} < 31
 mkdir build
 cd build
 %endif
@@ -82,7 +82,7 @@ make VERBOSE=2 %{?_smp_mflags}
 
 
 %install
-%if 0%{?rhel} < 8 && 0%{?fedora} < 31
+%if 0%{?rhel} < 9 && 0%{?fedora} < 31
 cd build
 make install DESTDIR=%{buildroot}
 %else

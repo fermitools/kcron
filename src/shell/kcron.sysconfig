@@ -8,9 +8,9 @@ KRB5_CONF_D=${KRB5_CONF_D:-'/etc/krb5.conf.d/*'}
 DEFAULT_REALM=$(grep default_realm ${KRB5_CONFIG} ${KRB5_CONF_D} 2>/dev/null | grep -v \# | cut -d '=' -f2 | tail -1 | tr -d ' ')
 REALM=${KCRON_REALM:-${DEFAULT_REALM}}
 
-WHOAMI=${KCRON_WHOAMI:-$(basename $(whoami))}
-NODENAME=${KCRON_NODENAME:-$(basename $(hostname))}
-FULLPRINCIPAL=${KCRON_FULLPRINCIPAL:-${WHOAMI}/cron/${NODENAME}@${REALM}}
+WHOAMI=${KCRON_WHOAMI:-$(basename "$(whoami)")}
+NODENAME=${KCRON_NODENAME:-$(basename "$(hostname)")}
+FULLPRINCIPAL=${KCRON_FULLPRINCIPAL:-"${WHOAMI}/cron/${NODENAME}@${REALM}"}
 
 KEYTAB_NAME_UTIL='/usr/libexec/kcron/client-keytab-name'
 KEYTAB_INIT='/usr/libexec/kcron/init-kcron-keytab'
