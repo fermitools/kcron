@@ -157,7 +157,7 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
   }
 
   if (euid != uid) {
-    /* use of CAP_DAC_OVERRIDE as we may not be able to chdir otherwise   */
+    /* use of CAP_DAC_OVERRIDE as we may not be able to chdir/make files otherwise   */
     if (enable_capabilities(caps, num_caps) != 0) {
       (void)free(path_str);
       (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
