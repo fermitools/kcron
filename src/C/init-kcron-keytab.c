@@ -185,27 +185,11 @@ int mkdir_p(char *dir, uid_t owner, gid_t group, mode_t mode) {
     return 1;
   }
 
-  if (euid != uid) {
-    /* use of CAP_DAC_OVERRIDE as we may not be able to fstat otherwise   */
-    if (enable_capabilities(caps, num_caps) != 0) {
-      (void)free(path_str);
-      (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
-      return 1;
-    }
-  }
-
   if (fstat(dirfd(my_dir), &st) != 0) {
     (void)free(path_str);
     (void)disable_capabilities();
     (void)fprintf(stderr, "%s: %s could not be created.\n", __PROGRAM_NAME, dir);
     (void)fprintf(stderr, "%s: this may be a permissions error?\n", __PROGRAM_NAME);
-    return 1;
-  }
-
-  if (disable_capabilities() != 0) {
-    /* technically we might not have active caps now, but eh              */
-    (void)free(path_str);
-    (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
 
