@@ -11,7 +11,7 @@ execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE VERSION OUTPUT_S
 include(FeatureSummary)
 
 set_package_properties(kcron PROPERTIES
- URL "https://github.com/scientificlinux/kcron"
+ URL "https://github.com/fermitools/kcron"
  DESCRIPTION "A utility for getting Kerberos credentials in scheduled jobs")
 
 
