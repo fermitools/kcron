@@ -72,7 +72,7 @@ cd build
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_RULE_MESSAGES:BOOL=ON \
- -DCLIENT_KEYTAB_DIR=%{_localstatedir}/kerberos/krb5/user
+ -DCLIENT_KEYTAB_DIR=%{_localstatedir}/kerberos/krb5/user \
  -Wdeprecated ..
 
 %if 0%{?rhel} < 8 && 0%{?fedora} < 31

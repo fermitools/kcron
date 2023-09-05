@@ -123,7 +123,7 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
   else ()
     message(WARNING "Expected compile flag '-grecord-gcc-switches' not found")
   endif (SET_GCC_SWITCHES)
-endif (CMAKE_C_COMPILER_ID)
+endif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
 #############################
 # Ensure the linker is hardened
@@ -184,7 +184,7 @@ else ()
 endif (FCF_PROTECT)
 
 CHECK_C_COMPILER_FLAG(-mshstk SAFESTACK_SHADOW)
-if (FCF_PROTECT)
+if (SAFESTACK_SHADOW)
   add_compile_options(-mshstk)
 else ()
   message(WARNING "Expected compile flag '-mshstk' not found")
