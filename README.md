@@ -37,6 +37,8 @@ Optional Runtime Requirements:
   * libseccomp - for dropping any unused system calls
   * systemtap - for tracing the capibilty calls within the kernel
 
+You are strongly encouraged to run with SELinux or AppArmor in enforcing mode to further protect the system from unknown exploits using this binaries enhanced privilege set.
+
 ## Build Requirements
 
   * CMake 3.14 or later
@@ -64,4 +66,4 @@ You may change the `/var/kerberos/krb5/user/` to an alternate location at build 
 
 The `Makefile` is not setting either SUID or CAPIBILITIES on the binary.  This is by design.
 
-See the [documentation](https://github.com/scientificlinux/kcron/blob/master/doc/kcron.doc) folder for more information.
+See the [documentation](https://github.com/fermitools/kcron/blob/main/README.md) folder for more information.
