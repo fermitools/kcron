@@ -43,6 +43,21 @@
 #include <unistd.h>       /* for getuid                           */
 
 
+int get_client_dirname(char *keytab_dir) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int get_client_dirname(char *keytab_dir) {
+
+  char *nullpointer = NULL;
+
+  if (keytab_dir == nullpointer) {
+    (void)fprintf(stderr, "%s: invalid memory passed in.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
+
+  (void)snprintf(keytab_dir, FILE_PATH_MAX_LENGTH, "%s", __CLIENT_KEYTAB_DIR);
+
+  return 0;
+}
+
 int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) __attribute__((nonnull (1, 2, 3))) __attribute__((warn_unused_result)) __attribute__((flatten));
 int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) {
 

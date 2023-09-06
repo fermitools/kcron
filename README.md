@@ -47,6 +47,7 @@ You are strongly encouraged to run with SELinux or AppArmor in enforcing mode to
 
 Optional Build Requirements:
 
+  * landlock headers - for filesystem level isolation
   * libcap headers - for use of system capibilities rather than suid
   * libseccomp headers - for dropping any unused system calls
   * systemtap headers - for tracing the capibilty calls within the kernel
@@ -66,4 +67,4 @@ You may change the `/var/kerberos/krb5/user/` to an alternate location at build 
 
 The `Makefile` is not setting either SUID or CAPIBILITIES on the binary.  This is by design.
 
-See the [documentation](https://github.com/fermitools/kcron/blob/main/README.md) folder for more information.
+See the [documentation](https://github.com/fermitools/kcron/tree/main/doc) folder for more information.
