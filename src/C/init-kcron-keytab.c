@@ -360,12 +360,45 @@ int main(void) {
     exit(EXIT_FAILURE);
   }
 
+  if (euid != uid) {
+    /* use of CAP_DAC_OVERRIDE as we may not be able to chdir otherwise   */
+    if (enable_capabilities(caps, num_caps) != 0) {
+      (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
+      (void)free(keytab);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
+      (void)free(client_keytab_dirname);
+      exit(EXIT_FAILURE);
+    }
+  }
+
   /* look for our keytab */
   stat_code = stat(keytab, &st);
+
+  if (disable_capabilities() != 0) {
+    (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
+    (void)free(keytab);
+    (void)free(keytab_dirname);
+    (void)free(keytab_filename);
+    (void)free(client_keytab_dirname);
+    exit(EXIT_FAILURE);
+  }
 
   /* If keytab is missing make it */
   /* If it exists but has the wrong permissions/owner do nothing, it is safer */
   if (stat_code == -1) {
+
+    if (euid != uid) {
+      /* use of CAP_DAC_OVERRIDE as we may not be able to chdir otherwise   */
+      if (enable_capabilities(caps, num_caps) != 0) {
+        (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
+        (void)free(keytab);
+        (void)free(keytab_dirname);
+        (void)free(keytab_filename);
+        (void)free(client_keytab_dirname);
+        exit(EXIT_FAILURE);
+      }
+    }
 
     /* use the inode of the dir we made earlier so folks can't move it      */
     /* there is still a small race condition, but we are somewhat protected */
@@ -386,6 +419,15 @@ int main(void) {
     if (fstat(dirfd(keytab_dir), &st) != 0) {
       (void)fprintf(stderr, "%s: %s could not be read.\n", __PROGRAM_NAME, keytab_dirname);
       (void)closedir(keytab_dir);
+      (void)free(keytab);
+      (void)free(keytab_dirname);
+      (void)free(keytab_filename);
+      (void)free(client_keytab_dirname);
+      exit(EXIT_FAILURE);
+    }
+
+    if (disable_capabilities() != 0) {
+      (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
       (void)free(keytab);
       (void)free(keytab_dirname);
       (void)free(keytab_filename);
