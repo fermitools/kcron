@@ -211,9 +211,20 @@ static int chown_chmod_keytab(int filedescriptor, char *keytab) {
     return 1;
   }
 
+  if (enable_capabilities(keytab_caps, num_caps) != 0) {
+    (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
+    return 1;
+  }
+
   /* did the file really create on disk */
+  /* use of CAP_DAC_OVERRIDE because dir should be chmod 700 */
   if (fstat(filedescriptor, &st) != 0) {
     (void)fprintf(stderr, "%s: Cannot stat file %s.\n", __PROGRAM_NAME, keytab);
+    return 1;
+  }
+
+  if (disable_capabilities() != 0) {
+    (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
 
@@ -443,18 +454,6 @@ int main(void) {
       (void)free(keytab_filename);
       (void)free(client_keytab_dirname);
       exit(EXIT_FAILURE);
-    }
-
-    if (euid != uid) {
-      /* use of CAP_DAC_OVERRIDE as we may not be able to edit the file otherwise   */
-      if (enable_capabilities(caps, num_caps) != 0) {
-        (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
-        (void)free(keytab);
-        (void)free(keytab_dirname);
-        (void)free(keytab_filename);
-        (void)free(client_keytab_dirname);
-        exit(EXIT_FAILURE);
-      }
     }
 
     filedescriptor = openat(dirfd(keytab_dir), keytab_filename, O_WRONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC, _0600);
