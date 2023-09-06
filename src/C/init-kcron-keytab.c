@@ -320,7 +320,8 @@ int main(void) {
   }
 
   /* is our client keytab directory set*/
-  if (get_client_dirname(client_keytab_dirname) != 0) {
+  get_client_dirname(client_keytab_dirname);
+  if (client_keytab_dirname != nullstring) {
     (void)fprintf(stderr, "%s: Client keytab directory not set.\n", __PROGRAM_NAME);
     (void)free(keytab);
     (void)free(keytab_dirname);
