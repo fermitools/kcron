@@ -106,7 +106,7 @@ static int mkdir_if_missing(char *dir, uid_t owner, gid_t group, mode_t mode) {
       /* whatever this is, it is not acceptable here */
       (void)fprintf(stderr, "%s: %s is not a directory.\n", __PROGRAM_NAME, dir);
       return 1;
-    } }
+    }
   }
 
   if (enable_capabilities(caps, num_caps) != 0) {

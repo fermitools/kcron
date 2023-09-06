@@ -38,6 +38,9 @@
 
 */
 
+#ifndef KCRON_FILENAME_H
+#define KCRON_FILENAME_H 1
+
 #include <stdio.h>        /* for calloc, fprintf, snprintf        */
 #include <stdlib.h>       /* for EXIT_FAILURE                     */
 #include <unistd.h>       /* for getuid                           */
@@ -90,4 +93,4 @@ int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) {
 
   return 0;
 }
-
+#endif
