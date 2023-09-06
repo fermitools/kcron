@@ -321,33 +321,33 @@ int main(void) {
 
   /* is our client keytab directory set*/
   if (get_client_dirname(client_keytab_dirname) != 0) {
+    (void)fprintf(stderr, "%s: Client keytab directory not set.\n", __PROGRAM_NAME);
     (void)free(keytab);
     (void)free(keytab_dirname);
     (void)free(keytab_filename);
     (void)free(client_keytab_dirname);
-    (void)fprintf(stderr, "%s: Client keytab directory not set.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
   /* look for our client keytab directory */
   stat_code = stat(client_keytab_dirname, &st);
   if (stat_code == -1) {
+    (void)fprintf(stderr, "%s: Client keytab directory does not exist: %s.\n", __PROGRAM_NAME, client_keytab_dirname);
+    (void)fprintf(stderr, "%s: Contact your admin to have it created.\n", __PROGRAM_NAME);
     (void)free(keytab);
     (void)free(keytab_dirname);
     (void)free(keytab_filename);
     (void)free(client_keytab_dirname);
-    (void)fprintf(stderr, "%s: Client keytab directory does not exist: %s.\n", __PROGRAM_NAME, client_keytab_dirname);
-    (void)fprintf(stderr, "%s: Contact your admin to have it created.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
   /* find our filenames */
   if (get_filenames(keytab_dirname, keytab_filename, keytab) != 0) {
+    (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     (void)free(keytab);
     (void)free(keytab_dirname);
     (void)free(keytab_filename);
     (void)free(client_keytab_dirname);
-    (void)fprintf(stderr, "%s: Cannot determine keytab filename.\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
