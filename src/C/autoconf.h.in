@@ -41,6 +41,7 @@
 #cmakedefine USE_CAPABILITIES @HAVE_CAPABILITIES_H@
 #cmakedefine USE_SYSTEMTAP @HAVE_SDT_H@
 #cmakedefine USE_SECCOMP @HAVE_SECCOMP_H@
+#cmakedefine USE_LANDLOCK @HAVE_LANDLOCK_H@
 
 #cmakedefine DEBUG
 

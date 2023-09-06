@@ -3,10 +3,11 @@
 %bcond_without libcap
 %bcond_without systemtap
 %bcond_without seccomp
+%bcond_without landlock
 
 Name:		fermilab-util_kcron
 
-Version:	1.6
+Version:	1.7
 Release:	1%{?dist}
 Summary:	A utility for getting Kerberos credentials in scheduled jobs
 
@@ -69,6 +70,11 @@ cd build
  -DUSE_SECCOMP=ON \
 %else
  -DUSE_SECCOMP=OFF \
+%endif
+%if %{with landlock}
+ -DUSE_LANDLOCK=ON \
+%else
+ -DUSE_LANDLOCK=OFF \
 %endif
  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
  -DCMAKE_RULE_MESSAGES:BOOL=ON \

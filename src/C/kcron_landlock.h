@@ -47,13 +47,16 @@
 #include <sys/syscall.h>                /* for  SYS_* constants               */
 #include <linux/landlock.h>             /* Definition of LANDLOCK_* constants */
 
-int set_kcron_landlock(void) __attribute__((warn_unused_result)) __attribute__((flatten));
-int set_kcron_landlock(void) {
+void set_kcron_landlock(void) __attribute__((flatten));
+void set_kcron_landlock(void) {
 
-  int landlock_abi = sys_landlock_create_ruleset(NULL, 0, LANDLOCK_CREATE_RULESET_VERSION);
   int landlock_ruleset_fd = 0;
-  int landlock_error = 0;
+  long int landlock_error = 0;
+
+  long int landlock_abi = syscall(__NR_landlock_create_ruleset, NULL, 0, LANDLOCK_CREATE_RULESET_VERSION);
+
   char *client_keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *nullstring = NULL;
 
   struct landlock_ruleset_attr ruleset_attr = {
     .handled_access_fs =
@@ -69,9 +72,7 @@ int set_kcron_landlock(void) {
         LANDLOCK_ACCESS_FS_MAKE_SOCK |
         LANDLOCK_ACCESS_FS_MAKE_FIFO |
         LANDLOCK_ACCESS_FS_MAKE_BLOCK |
-        LANDLOCK_ACCESS_FS_MAKE_SYM |
-        LANDLOCK_ACCESS_FS_REFER |
-        LANDLOCK_ACCESS_FS_TRUNCATE,
+        LANDLOCK_ACCESS_FS_MAKE_SYM,
   };
 
   struct landlock_path_beneath_attr path_beneath = {
@@ -89,49 +90,49 @@ int set_kcron_landlock(void) {
   }
 
   /* landlock unsupported, this is not an error exactly */
-  if landlock_abi < 0 {
-    return 0;
-  }
+  if (landlock_abi > 0) {
 
-  switch (abi) {
-  case 1:
-    /* Removes LANDLOCK_ACCESS_FS_REFER for ABI < 2 */
-    ruleset_attr.handled_access_fs &= ~LANDLOCK_ACCESS_FS_REFER;
-    __attribute__((fallthrough));
-  case 2:
-    /* Removes LANDLOCK_ACCESS_FS_TRUNCATE for ABI < 3 */
-    ruleset_attr.handled_access_fs &= ~LANDLOCK_ACCESS_FS_TRUNCATE;
-  }
+    if (get_client_dirname(client_keytab_dirname) != 0) {
+      (void)fprintf(stderr, "%s: Client keytab directory not set.\n", __PROGRAM_NAME);
+      (void)free(client_keytab_dirname);
+      (void)close(landlock_ruleset_fd);
+      exit(EXIT_FAILURE);
+    }
 
-  (void)get_client_dirname(client_keytab_dirname);
+    landlock_ruleset_fd = (int) syscall(__NR_landlock_create_ruleset, &ruleset_attr, sizeof(ruleset_attr), 0);
+    if (landlock_ruleset_fd < 0) {
+      (void)fprintf(stderr, "%s: landlock is enabled but non-functional?\n", __PROGRAM_NAME);
+      (void)free(client_keytab_dirname);
+      (void)close(landlock_ruleset_fd);
+      exit(EXIT_FAILURE);
+    }
 
-  landlock_ruleset_fd = landlock_create_ruleset(&ruleset_attr, sizeof(ruleset_attr), 0);
-  if (landlock_ruleset_fd < 0) {
-    (void)fprintf(stderr, "%s: landlock is enabled but non-functional?\n", __PROGRAM_NAME);
-    (void)free(client_keytab_dirname);
+    path_beneath.parent_fd = open(client_keytab_dirname, O_RDONLY|O_NOFOLLOW|O_CLOEXEC);
+    if (path_beneath.parent_fd < 0) {
+      (void)fprintf(stderr, "%s: landlock could not find %s?\n", __PROGRAM_NAME, client_keytab_dirname);
+      (void)free(client_keytab_dirname);
+      (void)close(landlock_ruleset_fd);
+      exit(EXIT_FAILURE);
+    }
+
+    landlock_error = syscall(__NR_landlock_add_rule, landlock_ruleset_fd, LANDLOCK_RULE_PATH_BENEATH, &path_beneath, 0);
+    (void)close(path_beneath.parent_fd);
+
+    if (landlock_error) {
+      (void)fprintf(stderr, "%s: landlock could not apply ruleset to %s?\n", __PROGRAM_NAME, client_keytab_dirname);
+      (void)free(client_keytab_dirname);
+      (void)close(landlock_ruleset_fd);
+      exit(EXIT_FAILURE);
+    }
+
+    if (syscall(__NR_landlock_restrict_self, landlock_ruleset_fd, 0)) {
+      (void)fprintf(stderr, "%s: landlock could not apply ruleset to self?\n", __PROGRAM_NAME);
+      (void)free(client_keytab_dirname);
+      (void)close(landlock_ruleset_fd);
+      exit(EXIT_FAILURE);
+    }
+
     (void)close(landlock_ruleset_fd);
-    exit(EXIT_FAILURE);
   }
-
-  path_beneath.parent_fd = open(client_keytab_dirname, O_RDONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC);
-  if (path_beneath.parent_fd < 0) {
-    (void)fprintf(stderr, "%s: landlock could not find %s?\n", __PROGRAM_NAME, client_keytab_dirname);
-    (void)free(client_keytab_dirname);
-    (void)close(landlock_ruleset_fd);
-    exit(EXIT_FAILURE);
-  }
-
-  landlock_error = landlock_add_rule(ruleset_fd, LANDLOCK_RULE_PATH_BENEATH, &path_beneath, 0);
-  (void)close(path_beneath.parent_fd);
-
-  if (landlock_error) {
-    (void)fprintf(stderr, "%s: landlock could not apply ruleset to %s?\n", __PROGRAM_NAME, client_keytab_dirname);
-    (void)free(client_keytab_dirname);
-    (void)close(landlock_ruleset_fd);
-    exit(EXIT_FAILURE);
-  }
-
-  return 0;
 }
-
 #endif

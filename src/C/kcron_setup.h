@@ -56,7 +56,6 @@
 #endif
 
 #include "kcron_caps.h"     /* for disable_capabilities         */
-#include "kcron_filename.h" /* for get_client_dirname           */
 
 int set_kcron_ulimits(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_ulimits(void) {
@@ -137,7 +136,8 @@ void harden_runtime(void) {
   }
 
 #if USE_LANDLOCK == 1
-  set_kcron_landlock();
+  /* do landlock before seccomp so the tools to change it become unreachable */
+  (void)set_kcron_landlock();
 #endif
 
 #if USE_SECCOMP == 1
