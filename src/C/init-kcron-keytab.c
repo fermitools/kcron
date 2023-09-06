@@ -504,6 +504,7 @@ int main(void) {
       exit(EXIT_FAILURE);
     }
 
+    /* write to it first to ensure its content is right before we set owner/mode */
     if (write_empty_keytab(filedescriptor) != 0) {
       (void)fprintf(stderr, "%s: Cannot create keytab : %s.\n", __PROGRAM_NAME, keytab);
       (void)close(filedescriptor);
@@ -514,7 +515,6 @@ int main(void) {
       exit(EXIT_FAILURE);
     }
 
-    filedescriptor = openat(dirfd(keytab_dir), keytab_filename, O_WRONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC, _0600);
     if (chown_chmod_keytab(filedescriptor, keytab) != 0) {
       (void)fprintf(stderr, "%s: Cannot set permissions on keytab : %s.\n", __PROGRAM_NAME, keytab);
       (void)close(filedescriptor);
