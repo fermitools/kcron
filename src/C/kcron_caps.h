@@ -6,7 +6,7 @@
 #include "autoconf.h" /* for our automatic config bits        */
 /*
 
-   Copyright 2017 Fermi Research Alliance, LLC
+   Copyright 2023 Fermi Research Alliance, LLC
 
    This software was produced under U.S. Government contract DE-AC02-07CH11359
    for Fermi National Accelerator Laboratory (Fermilab), which is operated by
