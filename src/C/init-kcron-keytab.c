@@ -69,8 +69,8 @@
 #define _0700 S_IRWXU
 #endif
 
-static int mkdir_if_missing(char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull(1))) __attribute__((access(read_only, 1))) __attribute__((warn_unused_result));
-static int mkdir_if_missing(char *dir, uid_t owner, gid_t group, mode_t mode) {
+static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull(1))) __attribute__((access(read_only, 1))) __attribute__((warn_unused_result));
+static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) {
 
   #if USE_CAPABILITIES == 1
   const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
@@ -188,8 +188,8 @@ static int mkdir_if_missing(char *dir, uid_t owner, gid_t group, mode_t mode) {
   return 0;
 }
 
-static int chown_chmod_keytab(int filedescriptor, char *keytab) __attribute__((nonnull(2))) __attribute__((access(read_only, 2))) __attribute__((warn_unused_result));
-static int chown_chmod_keytab(int filedescriptor, char *keytab) {
+static int chown_chmod_keytab(int filedescriptor, const char *keytab) __attribute__((nonnull(2))) __attribute__((access(read_only, 2))) __attribute__((warn_unused_result));
+static int chown_chmod_keytab(int filedescriptor, const char *keytab) {
 
   #if USE_CAPABILITIES == 1
   const cap_value_t keytab_caps[] = {CAP_CHOWN};
