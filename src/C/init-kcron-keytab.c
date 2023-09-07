@@ -242,6 +242,7 @@ static int chown_chmod_keytab(int filedescriptor, char *keytab) {
   }
 
   /* Set the right owner of our keytab */
+  /* Don't switch euid to uid as that may permit write to program memory */
   if (st.st_uid != uid || st.st_gid != gid) {
 
     if (enable_capabilities(keytab_caps, num_caps) != 0) {
