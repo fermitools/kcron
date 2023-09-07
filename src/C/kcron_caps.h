@@ -68,7 +68,7 @@ int disable_capabilities(void) {
   return 0;
 }
 
-static void print_cap_error(const char *mode, const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull (1))) __attribute__((flatten));
+static void print_cap_error(const char *mode, const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull(1))) __attribute__((access(read_only, 1))) __attribute__((flatten));
 static void print_cap_error(const char *mode, const cap_value_t expected_cap[], const int num_caps) {
     (void)fprintf(stderr, "%s: Unable to set CAPABILITIES %s\n", __PROGRAM_NAME, mode);
     (void)fprintf(stderr, "%s: Requested CAPABILITIES %s %i:\n", __PROGRAM_NAME, mode, num_caps);
@@ -78,7 +78,7 @@ static void print_cap_error(const char *mode, const cap_value_t expected_cap[], 
 }
 
 
-int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten)) __attribute__((hot));
+int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull(1))) __attribute__((warn_unused_result)) __attribute__((flatten)) __attribute__((hot));
 int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
   cap_t capabilities;
 
@@ -130,8 +130,8 @@ int disable_capabilities(void) {
   return 0;
 }
 
-int enable_capabilities(const cap_value_t expected_cap[]) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten));
-int enable_capabilities(const cap_value_t expected_cap[]) {
+int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull(1))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 2);
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 2);
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 2);

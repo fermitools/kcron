@@ -45,17 +45,11 @@
 #include <stdio.h>        /* for fprintf, stderr, NULL   */
 #include <stdlib.h>       /* for EXIT_FAILURE            */
 
-#include <sys/stat.h>     /* for S_IRWXU, stat, S_IXGRP, etc  */
+#include <sys/stat.h>     /* for S_IRUSR, S_IWUSR, stat, etc  */
 
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
-#endif
-#ifndef _0700
-#define _0700 S_IRWXU
-#endif
-#ifndef _0711
-#define _0711 S_IRWXU | S_IXGRP | S_IXOTH
 #endif
 
 
