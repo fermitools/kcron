@@ -49,7 +49,7 @@
 #include <sys/types.h>      /* for cap_t, etc                */
 
 
-int disable_capabilities(void) __attribute__((flatten));
+int disable_capabilities(void) __attribute__((flatten)) __attribute__((hot));
 int disable_capabilities(void) {
   cap_t capabilities;
 
@@ -78,7 +78,7 @@ static void print_cap_error(const char *mode, const cap_value_t expected_cap[], 
 }
 
 
-int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull (1))) __attribute__((warn_unused_result)) __attribute__((flatten)) __attribute__((hot));
 int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
   cap_t capabilities;
 
