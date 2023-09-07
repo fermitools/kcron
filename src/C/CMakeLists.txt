@@ -191,6 +191,13 @@ else ()
   message(WARNING "Expected compile flag '-fcf-protection=full' not found")
 endif (FCF_PROTECT)
 
+CHECK_C_COMPILER_FLAG(-fzero-call-used-regs=all ZERO_CALL_REGS)
+if (ZERO_CALL_REGS)
+  add_compile_options(-fzero-call-used-regs=all)
+else ()
+  message(WARNING "Expected compile flag '-fzero-call-used-regs=all' not found")
+endif (ZERO_CALL_REGS)
+
 CHECK_C_COMPILER_FLAG(-mshstk SAFESTACK_SHADOW)
 if (SAFESTACK_SHADOW)
   add_compile_options(-mshstk)
