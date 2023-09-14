@@ -69,7 +69,7 @@ int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) {
   char *nullpointer = NULL;
 
   /* we are just using an int rather than the name, so this is enough space */
-  char *uid_str = calloc(USERNAME_MAX_LENGTH + 1, sizeof(char));
+  char *uid_str = calloc(USERNAME_MAX_LENGTH + 3, sizeof(char));
 
   if (uid_str == nullpointer) {
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);

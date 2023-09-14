@@ -53,9 +53,9 @@ int main(void) {
 
   char *nullstring = NULL;
 
-  char *keytab = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
-  char *keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
-  char *keytab_filename = calloc(FILE_PATH_MAX_LENGTH + 1, sizeof(char));
+  char *keytab = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));
+  char *keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));
+  char *keytab_filename = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));
 
   if ((keytab == nullstring) || (keytab_dirname == nullstring) || (keytab_filename == nullstring)) {
     if (keytab != nullstring) {
