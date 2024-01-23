@@ -147,6 +147,7 @@ static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mo
 
   /* did the directory really create on disk */
   if (fstat(dirfd(my_dir), &st) != 0) {
+    (void)closedir(my_dir);
     (void)disable_capabilities();
     (void)fprintf(stderr, "%s: %s could not be created.\n", __PROGRAM_NAME, dir);
     (void)fprintf(stderr, "%s: This may be a permissions error?\n", __PROGRAM_NAME);
@@ -155,17 +156,20 @@ static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mo
 
   if (disable_capabilities() != 0) {
     /* technically we might not have active caps now, but eh              */
+    (void)closedir(my_dir);
     (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
 
   if (!S_ISDIR(st.st_mode)) {
+    (void)closedir(my_dir);
     (void)disable_capabilities();
     (void)fprintf(stderr, "%s: %s is not a directory.\n", __PROGRAM_NAME, dir);
     return 1;
   }
 
   if (enable_capabilities(caps, num_caps) != 0) {
+    (void)closedir(my_dir);
     (void)fprintf(stderr, "%s: Cannot enable capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
@@ -180,6 +184,7 @@ static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mo
   }
 
   if (disable_capabilities() != 0) {
+    (void)closedir(my_dir);
     (void)fprintf(stderr, "%s: Cannot drop capabilities.\n", __PROGRAM_NAME);
     return 1;
   }
