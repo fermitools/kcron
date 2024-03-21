@@ -53,8 +53,8 @@ int write_empty_keytab(int filedescriptor) {
   }
 
   /* This magic string makes ktutil and kadmin happy with an empty file */
-  char emptykeytab_a = 0x05;
-  char emptykeytab_b = 0x02;
+  const char emptykeytab_a = 0x05;
+  const char emptykeytab_b = 0x02;
 
   if (write(filedescriptor, &emptykeytab_a, sizeof(emptykeytab_a)) != sizeof(emptykeytab_a)) {
     (void)fprintf(stderr, "%s: could not write initial block to keytab.\n", __PROGRAM_NAME);

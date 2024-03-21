@@ -81,13 +81,13 @@ static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mo
 
   struct stat st = {0};
 
-  char *nullstring = NULL;
+  const char *nullstring = NULL;
 
   DIR *my_dir = NULL;
-  DIR *null_dir = NULL;
+  const DIR *null_dir = NULL;
 
-  uid_t uid = getuid();
-  uid_t euid = geteuid();
+  const uid_t uid = getuid();
+  const uid_t euid = geteuid();
 
   if (dir == nullstring) {
     /* nothing to do - no dir passed */
@@ -201,10 +201,10 @@ static int chown_chmod_keytab(int filedescriptor, const char *keytab) {
   #else
   const cap_value_t keytab_caps[] = {-1};
   #endif
-  int num_caps = sizeof(keytab_caps) / sizeof(cap_value_t);
+  const int num_caps = sizeof(keytab_caps) / sizeof(cap_value_t);
 
-  uid_t uid = getuid();
-  gid_t gid = getgid();
+  const uid_t uid = getuid();
+  const gid_t gid = getgid();
 
   struct stat st = {0};
 
@@ -279,23 +279,23 @@ int main(void) {
 
   struct stat st = {0};
 
-  char *nullstring = NULL;
+  const char *nullstring = NULL;
   int filedescriptor = 0;
   int stat_code = -1;
 
   DIR *keytab_dir = NULL;
-  DIR *null_dir = NULL;
+  const DIR *null_dir = NULL;
 
   #if USE_CAPABILITIES == 1
   const cap_value_t caps[] = {CAP_DAC_OVERRIDE};
   #else
   const cap_value_t caps[] = {-1};
   #endif
-  int num_caps = sizeof(caps) / sizeof(cap_value_t);
+  const int num_caps = sizeof(caps) / sizeof(cap_value_t);
 
-  uid_t euid = geteuid();
-  uid_t uid = getuid();
-  gid_t gid = getgid();
+  const uid_t euid = geteuid();
+  const uid_t uid = getuid();
+  const gid_t gid = getgid();
 
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));
   char *keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));

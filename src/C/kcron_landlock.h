@@ -56,7 +56,7 @@ void set_kcron_landlock(void) {
   long int landlock_abi = syscall(__NR_landlock_create_ruleset, NULL, 0, LANDLOCK_CREATE_RULESET_VERSION);
 
   char *client_keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));
-  char *nullstring = NULL;
+  const char *nullstring = NULL;
 
   struct landlock_ruleset_attr ruleset_attr = {
     .handled_access_fs =

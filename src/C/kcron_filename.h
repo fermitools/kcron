@@ -49,7 +49,7 @@
 int get_client_dirname(char *keytab_dir) __attribute__((nonnull(1))) __attribute__((access(read_write, 1))) __attribute__((warn_unused_result)) __attribute__((flatten));
 int get_client_dirname(char *keytab_dir) {
 
-  char *nullpointer = NULL;
+  const char *nullpointer = NULL;
 
   if (keytab_dir == nullpointer) {
     (void)fprintf(stderr, "%s: invalid memory passed in.\n", __PROGRAM_NAME);
@@ -64,9 +64,9 @@ int get_client_dirname(char *keytab_dir) {
 int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) __attribute__((nonnull(1, 2, 3))) __attribute__((access(read_write, 1))) __attribute((access(read_write, 2))) __attribute((access(read_write, 3))) __attribute__((warn_unused_result)) __attribute__((flatten));
 int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) {
 
-  uid_t uid = getuid();
+  const uid_t uid = getuid();
 
-  char *nullpointer = NULL;
+  const char *nullpointer = NULL;
 
   /* we are just using an int rather than the name, so this is enough space */
   char *uid_str = calloc(USERNAME_MAX_LENGTH + 3, sizeof(char));

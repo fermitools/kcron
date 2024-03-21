@@ -51,7 +51,7 @@
 
 int main(void) {
 
-  char *nullstring = NULL;
+  const char *nullstring = NULL;
 
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));
   char *keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));

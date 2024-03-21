@@ -51,9 +51,7 @@
 
 int disable_capabilities(void) __attribute__((flatten)) __attribute__((hot));
 int disable_capabilities(void) {
-  cap_t capabilities;
-
-  capabilities = cap_get_proc();
+  cap_t capabilities = cap_get_proc();
 
   if (cap_clear(capabilities)) {
     /* error */
@@ -80,9 +78,7 @@ static void print_cap_error(const char *mode, const cap_value_t expected_cap[], 
 
 int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull(1))) __attribute__((warn_unused_result)) __attribute__((flatten)) __attribute__((hot));
 int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
-  cap_t capabilities;
-
-  capabilities = cap_get_proc();
+  cap_t capabilities = cap_get_proc();
 
   /* clear any active capabilities */
   if (disable_capabilities() != 0) {

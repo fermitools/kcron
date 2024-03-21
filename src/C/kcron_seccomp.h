@@ -56,8 +56,7 @@
 int set_kcron_seccomp(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_seccomp(void) {
 
-  scmp_filter_ctx ctx;
-  ctx = seccomp_init(SCMP_ACT_KILL); /* default action: kill */
+  scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL); /* default action: kill */
 
   if (ctx == NULL) {
     exit(EXIT_FAILURE);
