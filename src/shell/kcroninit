@@ -127,7 +127,7 @@ DESTROY_CACHE=$(which kdestroy)
 ###########################################################
 echo "kcroninit creates principal ${FULLPRINCIPAL} and/or extracts its keys into a keytab."
 echo "This principal is used by the kcron utility for authentication."
-echo "You need to know the password for ${ADMPRINCIPAL} to continue."
+echo "You need to know the password for the '${ADMPRINCIPAL}' user to continue."
 while true; do
     read -r -p 'Do you want to continue? (y/n)' y_n
     case ${y_n} in
