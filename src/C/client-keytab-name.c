@@ -59,13 +59,13 @@ int main(void) {
 
   if ((keytab == nullstring) || (keytab_dirname == nullstring) || (keytab_filename == nullstring)) {
     if (keytab != nullstring) {
-      free(keytab);
+      (void)free(keytab);
     }
     if (keytab_dirname != nullstring) {
-      free(keytab_dirname);
+      (void)free(keytab_dirname);
     }
     if (keytab_filename != nullstring) {
-      free(keytab_filename);
+      (void)free(keytab_filename);
     }
 
     (void)fprintf(stderr, "%s: unable to allocate memory.\n", __PROGRAM_NAME);
