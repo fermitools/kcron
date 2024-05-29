@@ -90,7 +90,7 @@ int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 1);
     (void)cap_free(capabilities);
     /* error */
-    print_cap_error("PERMITTED", expected_cap, num_caps);
+    (void)print_cap_error("PERMITTED", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 0);
@@ -99,7 +99,7 @@ int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 1);
     (void)cap_free(capabilities);
     /* error */
-    print_cap_error("ACTIVE", expected_cap, num_caps);
+    (void)print_cap_error("ACTIVE", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 0);
@@ -108,7 +108,7 @@ int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
     DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 1);
     (void)cap_free(capabilities);
     /* error */
-    print_cap_error("ACTIVE", expected_cap, num_caps);
+    (void)print_cap_error("ACTIVE", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
   DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 0);
