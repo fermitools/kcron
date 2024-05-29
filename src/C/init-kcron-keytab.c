@@ -44,22 +44,22 @@
 #define __PROGRAM_NAME "init-kcron-keytab"
 #endif
 
-#include <dirent.h>                     /* for dirfd                          */
-#include <fcntl.h>                      /* for openat, O_WRONLY               */
-#include <libgen.h>                     /* for dirname                        */
-#include <stdio.h>                      /* for fprintf, stderr, NULL, etc     */
-#include <stdlib.h>                     /* for free, EXIT_FAILURE, etc        */
-#include <sys/stat.h>                   /* for S_IRWXU, stat, S_IXGRP, etc    */
-#include <sys/types.h>                  /* for uid_t, gid_t, etc              */
-#include <unistd.h>                     /* for getuid, fchown, fchmod         */
+#include <dirent.h>    /* for dirfd                          */
+#include <fcntl.h>     /* for openat, O_WRONLY               */
+#include <libgen.h>    /* for dirname                        */
+#include <stdio.h>     /* for fprintf, stderr, NULL, etc     */
+#include <stdlib.h>    /* for free, EXIT_FAILURE, etc        */
+#include <sys/stat.h>  /* for S_IRWXU, stat, S_IXGRP, etc    */
+#include <sys/types.h> /* for uid_t, gid_t, etc              */
+#include <unistd.h>    /* for getuid, fchown, fchmod         */
 
-#include "kcron_caps.h"                 /* for disable_capabilities, etc      */
-#include "kcron_filename.h"             /* for get_filename                   */
-#include "kcron_empty_keytab_file.h"    /* for write_empty_keytab             */
-#include "kcron_setup.h"                /* for harden_runtime                 */
+#include "kcron_caps.h"              /* for disable_capabilities, etc      */
+#include "kcron_empty_keytab_file.h" /* for write_empty_keytab             */
+#include "kcron_filename.h"          /* for get_filename                   */
+#include "kcron_setup.h"             /* for harden_runtime                 */
 
 #if USE_CAPABILITIES == 1
-#include <sys/capability.h>             /* for CAP_CHOWN, CAP_FOWNER,etc      */
+#include <sys/capability.h> /* for CAP_CHOWN, CAP_FOWNER,etc      */
 #endif
 
 #ifndef _0600
@@ -69,14 +69,15 @@
 #define _0700 S_IRWXU
 #endif
 
-static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull(1))) __attribute__((access(read_only, 1))) __attribute__((warn_unused_result));
+static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull(1))) __attribute__((access(read_only, 1)))
+__attribute__((warn_unused_result));
 static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) {
 
-  #if USE_CAPABILITIES == 1
+#if USE_CAPABILITIES == 1
   const cap_value_t caps[] = {CAP_CHOWN, CAP_DAC_OVERRIDE};
-  #else
+#else
   const cap_value_t caps[] = {-1};
-  #endif
+#endif
   int num_caps = sizeof(caps) / sizeof(cap_value_t);
 
   struct stat st = {0};
@@ -193,14 +194,15 @@ static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mo
   return 0;
 }
 
-static int chown_chmod_keytab(int filedescriptor, const char *keytab) __attribute__((nonnull(2))) __attribute__((access(read_only, 2))) __attribute__((warn_unused_result));
+static int chown_chmod_keytab(int filedescriptor, const char *keytab) __attribute__((nonnull(2))) __attribute__((access(read_only, 2)))
+__attribute__((warn_unused_result));
 static int chown_chmod_keytab(int filedescriptor, const char *keytab) {
 
-  #if USE_CAPABILITIES == 1
+#if USE_CAPABILITIES == 1
   const cap_value_t keytab_caps[] = {CAP_CHOWN};
-  #else
+#else
   const cap_value_t keytab_caps[] = {-1};
-  #endif
+#endif
   const int num_caps = sizeof(keytab_caps) / sizeof(cap_value_t);
 
   const uid_t uid = getuid();
@@ -269,8 +271,7 @@ static int chown_chmod_keytab(int filedescriptor, const char *keytab) {
 }
 
 void constructor(void) __attribute__((constructor));
-void constructor(void)
-{
+void constructor(void) {
   /* Setup runtime hardening /before/ main() is even called */
   (void)harden_runtime();
 }
@@ -286,11 +287,11 @@ int main(void) {
   DIR *keytab_dir = NULL;
   const DIR *null_dir = NULL;
 
-  #if USE_CAPABILITIES == 1
+#if USE_CAPABILITIES == 1
   const cap_value_t caps[] = {CAP_DAC_OVERRIDE};
-  #else
+#else
   const cap_value_t caps[] = {-1};
-  #endif
+#endif
   const int num_caps = sizeof(caps) / sizeof(cap_value_t);
 
   const uid_t euid = geteuid();
@@ -448,7 +449,7 @@ int main(void) {
       exit(EXIT_FAILURE);
     }
 
-    filedescriptor = openat(dirfd(keytab_dir), keytab_filename, O_WRONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC, _0600);
+    filedescriptor = openat(dirfd(keytab_dir), keytab_filename, O_WRONLY | O_CREAT | O_NOFOLLOW | O_CLOEXEC, _0600);
 
     if (disable_capabilities() != 0) {
       /* technically we might not have active caps now, but eh              */

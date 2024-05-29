@@ -41,17 +41,15 @@
 #ifndef KCRON_SECCOMP_H
 #define KCRON_SECCOMP_H 1
 
-#include <seccomp.h>      /* libseccomp                  */
-#include <stdio.h>        /* for fprintf, stderr, NULL   */
-#include <stdlib.h>       /* for EXIT_FAILURE            */
+#include <seccomp.h> /* libseccomp                  */
+#include <stdio.h>   /* for fprintf, stderr, NULL   */
+#include <stdlib.h>  /* for EXIT_FAILURE            */
 
-#include <sys/stat.h>     /* for S_IRUSR, S_IWUSR, stat, etc  */
-
+#include <sys/stat.h> /* for S_IRUSR, S_IWUSR, stat, etc  */
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
 #endif
-
 
 int set_kcron_seccomp(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_seccomp(void) {
@@ -101,28 +99,27 @@ int set_kcron_seccomp(void) {
     exit(EXIT_FAILURE);
   }
 
-
- /*
-  * STDOUT
-  */
+  /*
+   * STDOUT
+   */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 1)) != 0) {
     (void)fprintf(stderr, "%s: Cannot set allowlist 'write' to stdout.\n", __PROGRAM_NAME);
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
 
- /*
-  * STDERR
-  */
+  /*
+   * STDERR
+   */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 2)) != 0) {
     (void)fprintf(stderr, "%s: Cannot set allowlist 'write' to stderr.\n", __PROGRAM_NAME);
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
 
- /*
-  *   Our directory handle
-  */
+  /*
+   *   Our directory handle
+   */
 
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(openat), 0) != 0) {
     /* not sure how to restrict this to the args I want */
@@ -137,9 +134,9 @@ int set_kcron_seccomp(void) {
     exit(EXIT_FAILURE);
   }
 
- /*
-  *   Our file handle
-  */
+  /*
+   *   Our file handle
+   */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
     (void)fprintf(stderr, "%s: Cannot set allowlist 'write' to our file handle.\n", __PROGRAM_NAME);
     (void)seccomp_release(ctx);
@@ -161,9 +158,9 @@ int set_kcron_seccomp(void) {
     exit(EXIT_FAILURE);
   }
 
- /*
-  *   General usage, not sure how to restrict these to the args I want....
-  */
+  /*
+   *   General usage, not sure how to restrict these to the args I want....
+   */
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fstat), 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot set allowlist 'fstat'.\n", __PROGRAM_NAME);
     (void)seccomp_release(ctx);
@@ -189,7 +186,6 @@ int set_kcron_seccomp(void) {
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
-
 
 #if USE_CAPABILITIES == 1
   if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(capget), 0) != 0) {
