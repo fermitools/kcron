@@ -333,8 +333,7 @@ int main(void) {
   }
 
   /* look for our client keytab directory */
-  stat_code = stat(client_keytab_dirname, &st);
-  if (stat_code == -1) {
+  if (stat(client_keytab_dirname, &st) == -1) {
     (void)fprintf(stderr, "%s: Client keytab directory does not exist: %s.\n", __PROGRAM_NAME, client_keytab_dirname);
     (void)fprintf(stderr, "%s: Contact your admin to have it created.\n", __PROGRAM_NAME);
     (void)free(keytab);
