@@ -41,12 +41,12 @@
 #ifndef KCRON_FILENAME_H
 #define KCRON_FILENAME_H 1
 
-#include <stdio.h>        /* for calloc, fprintf, snprintf        */
-#include <stdlib.h>       /* for EXIT_FAILURE                     */
-#include <unistd.h>       /* for getuid                           */
+#include <stdio.h>  /* for calloc, fprintf, snprintf        */
+#include <stdlib.h> /* for EXIT_FAILURE                     */
+#include <unistd.h> /* for getuid                           */
 
-
-int get_client_dirname(char *keytab_dir) __attribute__((nonnull(1))) __attribute__((access(read_write, 1))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int get_client_dirname(char *keytab_dir) __attribute__((nonnull(1))) __attribute__((access(read_write, 1))) __attribute__((warn_unused_result))
+__attribute__((flatten));
 int get_client_dirname(char *keytab_dir) {
 
   const char *nullpointer = NULL;
@@ -61,7 +61,8 @@ int get_client_dirname(char *keytab_dir) {
   return 0;
 }
 
-int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) __attribute__((nonnull(1, 2, 3))) __attribute__((access(read_write, 1))) __attribute((access(read_write, 2))) __attribute((access(read_write, 3))) __attribute__((warn_unused_result)) __attribute__((flatten));
+int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) __attribute__((nonnull(1, 2, 3))) __attribute__((access(read_write, 1)))
+__attribute((access(read_write, 2))) __attribute((access(read_write, 3))) __attribute__((warn_unused_result)) __attribute__((flatten));
 int get_filenames(char *keytab_dir, char *keytab_filename, char *keytab) {
 
   const uid_t uid = getuid();

@@ -41,8 +41,8 @@
 #ifndef KCRON_EMPTY_KEYTAB_FILE_H
 #define KCRON_EMPTY_KEYTAB_FILE_H 1
 
-#include <stdio.h>          /* for fprintf, stderr, NULL, etc   */
-#include <stdlib.h>         /* for EXIT_FAILURE                 */
+#include <stdio.h>  /* for fprintf, stderr, NULL, etc   */
+#include <stdlib.h> /* for EXIT_FAILURE                 */
 
 int write_empty_keytab(int filedescriptor) __attribute__((warn_unused_result));
 int write_empty_keytab(int filedescriptor) {

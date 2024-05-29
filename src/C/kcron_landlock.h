@@ -41,11 +41,11 @@
 #ifndef KCRON_LANDLOCK_H
 #define KCRON_LANDLOCK_H 1
 
-#include <stdio.h>                      /* for fprintf, stderr, NULL, etc     */
-#include <stdlib.h>                     /* for free, EXIT_FAILURE, etc        */
+#include <stdio.h>  /* for fprintf, stderr, NULL, etc     */
+#include <stdlib.h> /* for free, EXIT_FAILURE, etc        */
 
-#include <sys/syscall.h>                /* for  SYS_* constants               */
-#include <linux/landlock.h>             /* Definition of LANDLOCK_* constants */
+#include <linux/landlock.h> /* Definition of LANDLOCK_* constants */
+#include <sys/syscall.h>    /* for  SYS_* constants               */
 
 void set_kcron_landlock(void) __attribute__((flatten));
 void set_kcron_landlock(void) {
@@ -59,28 +59,14 @@ void set_kcron_landlock(void) {
   const char *nullstring = NULL;
 
   struct landlock_ruleset_attr ruleset_attr = {
-    .handled_access_fs =
-        LANDLOCK_ACCESS_FS_EXECUTE |
-        LANDLOCK_ACCESS_FS_WRITE_FILE |
-        LANDLOCK_ACCESS_FS_READ_FILE |
-        LANDLOCK_ACCESS_FS_READ_DIR |
-        LANDLOCK_ACCESS_FS_REMOVE_DIR |
-        LANDLOCK_ACCESS_FS_REMOVE_FILE |
-        LANDLOCK_ACCESS_FS_MAKE_CHAR |
-        LANDLOCK_ACCESS_FS_MAKE_DIR |
-        LANDLOCK_ACCESS_FS_MAKE_REG |
-        LANDLOCK_ACCESS_FS_MAKE_SOCK |
-        LANDLOCK_ACCESS_FS_MAKE_FIFO |
-        LANDLOCK_ACCESS_FS_MAKE_BLOCK |
-        LANDLOCK_ACCESS_FS_MAKE_SYM,
+      .handled_access_fs = LANDLOCK_ACCESS_FS_EXECUTE | LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR |
+                           LANDLOCK_ACCESS_FS_REMOVE_DIR | LANDLOCK_ACCESS_FS_REMOVE_FILE | LANDLOCK_ACCESS_FS_MAKE_CHAR | LANDLOCK_ACCESS_FS_MAKE_DIR |
+                           LANDLOCK_ACCESS_FS_MAKE_REG | LANDLOCK_ACCESS_FS_MAKE_SOCK | LANDLOCK_ACCESS_FS_MAKE_FIFO | LANDLOCK_ACCESS_FS_MAKE_BLOCK |
+                           LANDLOCK_ACCESS_FS_MAKE_SYM,
   };
 
   struct landlock_path_beneath_attr path_beneath = {
-    .allowed_access =
-        LANDLOCK_ACCESS_FS_WRITE_FILE |
-        LANDLOCK_ACCESS_FS_READ_FILE |
-        LANDLOCK_ACCESS_FS_READ_DIR |
-        LANDLOCK_ACCESS_FS_MAKE_DIR,
+      .allowed_access = LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR | LANDLOCK_ACCESS_FS_MAKE_DIR,
   };
 
   /* verify memory can be allocated */
@@ -99,7 +85,7 @@ void set_kcron_landlock(void) {
       exit(EXIT_FAILURE);
     }
 
-    landlock_ruleset_fd = (int) syscall(__NR_landlock_create_ruleset, &ruleset_attr, sizeof(ruleset_attr), 0);
+    landlock_ruleset_fd = (int)syscall(__NR_landlock_create_ruleset, &ruleset_attr, sizeof(ruleset_attr), 0);
     if (landlock_ruleset_fd < 0) {
       (void)fprintf(stderr, "%s: landlock is enabled but non-functional?\n", __PROGRAM_NAME);
       (void)free(client_keytab_dirname);
@@ -107,7 +93,7 @@ void set_kcron_landlock(void) {
       exit(EXIT_FAILURE);
     }
 
-    path_beneath.parent_fd = open(client_keytab_dirname, O_RDONLY|O_NOFOLLOW|O_CLOEXEC);
+    path_beneath.parent_fd = open(client_keytab_dirname, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (path_beneath.parent_fd < 0) {
       (void)fprintf(stderr, "%s: landlock could not find %s?\n", __PROGRAM_NAME, client_keytab_dirname);
       (void)free(client_keytab_dirname);
