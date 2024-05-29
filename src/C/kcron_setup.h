@@ -114,6 +114,10 @@ int set_kcron_ulimits(void) {
 
 void harden_runtime(void) __attribute__((flatten));
 void harden_runtime(void) {
+  if (freopen("/dev/null", "r", stdin) == NULL) {
+    (void)fprintf(stderr, "%s: Cannot reset stdin to /dev/null.\n", __PROGRAM_NAME);
+    exit(EXIT_FAILURE);
+  }
 
   if (prctl(PR_SET_DUMPABLE, 0) != 0) {
     (void)fprintf(stderr, "%s: Cannot disable core dumps.\n", __PROGRAM_NAME);
