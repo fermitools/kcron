@@ -44,10 +44,10 @@
 #define __PROGRAM_NAME "client-keytab-name"
 #endif
 
-#include <stdio.h>  /* for fprintf, stderr, NULL, etc   */
-#include <stdlib.h> /* for free, EXIT_FAILURE, etc      */
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "kcron_filename.h" /* for get_filename                 */
+#include "kcron_filename.h"
 
 int main(void) {
 

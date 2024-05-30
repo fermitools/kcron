@@ -41,11 +41,11 @@
 #ifndef KCRON_SECCOMP_H
 #define KCRON_SECCOMP_H 1
 
-#include <seccomp.h> /* libseccomp                  */
-#include <stdio.h>   /* for fprintf, stderr, NULL   */
-#include <stdlib.h>  /* for EXIT_FAILURE            */
+#include <seccomp.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <sys/stat.h> /* for S_IRUSR, S_IWUSR, stat, etc  */
+#include <sys/stat.h>
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR

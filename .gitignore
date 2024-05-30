@@ -4,3 +4,4 @@ kcron.tar.gz
 *.swp
 RPMS
 SRPMS
+src/C/autoconf.h

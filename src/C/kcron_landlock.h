@@ -41,11 +41,12 @@
 #ifndef KCRON_LANDLOCK_H
 #define KCRON_LANDLOCK_H 1
 
-#include <stdio.h>  /* for fprintf, stderr, NULL, etc     */
-#include <stdlib.h> /* for free, EXIT_FAILURE, etc        */
+#include <libgen.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <linux/landlock.h> /* Definition of LANDLOCK_* constants */
-#include <sys/syscall.h>    /* for  SYS_* constants               */
+#include <linux/landlock.h>
+#include <sys/syscall.h>
 
 void set_kcron_landlock(void) __attribute__((flatten));
 void set_kcron_landlock(void) {
@@ -66,7 +67,7 @@ void set_kcron_landlock(void) {
   };
 
   struct landlock_path_beneath_attr path_beneath = {
-      .allowed_access = LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR | LANDLOCK_ACCESS_FS_MAKE_DIR,
+      .allowed_access = LANDLOCK_ACCESS_FS_WRITE_FILE | LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR | LANDLOCK_ACCESS_FS_MAKE_DIR | LANDLOCK_ACCESS_FS_MAKE_FILE,
   };
 
   /* verify memory can be allocated */
@@ -93,7 +94,7 @@ void set_kcron_landlock(void) {
       exit(EXIT_FAILURE);
     }
 
-    path_beneath.parent_fd = open(client_keytab_dirname, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    path_beneath.parent_fd = open(dirname(client_keytab_dirname), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     if (path_beneath.parent_fd < 0) {
       (void)fprintf(stderr, "%s: landlock could not find %s?\n", __PROGRAM_NAME, client_keytab_dirname);
       (void)free(client_keytab_dirname);

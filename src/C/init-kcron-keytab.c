@@ -44,23 +44,21 @@
 #define __PROGRAM_NAME "init-kcron-keytab"
 #endif
 
-#include <dirent.h>    /* for dirfd                          */
-#include <fcntl.h>     /* for openat, O_WRONLY               */
-#include <libgen.h>    /* for dirname                        */
-#include <stdio.h>     /* for fprintf, stderr, NULL, etc     */
-#include <stdlib.h>    /* for free, EXIT_FAILURE, etc        */
-#include <sys/stat.h>  /* for S_IRWXU, stat, S_IXGRP, etc    */
-#include <sys/types.h> /* for uid_t, gid_t, etc              */
-#include <unistd.h>    /* for getuid, fchown, fchmod         */
+#include "autoconf.h"
 
-#include "kcron_caps.h"              /* for disable_capabilities, etc      */
-#include "kcron_empty_keytab_file.h" /* for write_empty_keytab             */
-#include "kcron_filename.h"          /* for get_filename                   */
-#include "kcron_setup.h"             /* for harden_runtime                 */
+#include <dirent.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/capability.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#if USE_CAPABILITIES == 1
-#include <sys/capability.h> /* for CAP_CHOWN, CAP_FOWNER,etc      */
-#endif
+#include "kcron_caps.h"
+#include "kcron_empty_keytab_file.h"
+#include "kcron_filename.h"
+#include "kcron_setup.h"
 
 #ifndef _0600
 #define _0600 S_IRUSR | S_IWUSR
@@ -69,8 +67,7 @@
 #define _0700 S_IRWXU
 #endif
 
-static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull(1))) __attribute__((access(read_only, 1)))
-__attribute__((warn_unused_result));
+static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((nonnull(1))) __attribute__((access(read_only, 1))) __attribute__((warn_unused_result));
 static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) {
 
 #if USE_CAPABILITIES == 1
@@ -194,8 +191,7 @@ static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mo
   return 0;
 }
 
-static int chown_chmod_keytab(int filedescriptor, const char *keytab) __attribute__((nonnull(2))) __attribute__((access(read_only, 2)))
-__attribute__((warn_unused_result));
+static int chown_chmod_keytab(int filedescriptor, const char *keytab) __attribute__((nonnull(2))) __attribute__((access(read_only, 2))) __attribute__((warn_unused_result));
 static int chown_chmod_keytab(int filedescriptor, const char *keytab) {
 
 #if USE_CAPABILITIES == 1
