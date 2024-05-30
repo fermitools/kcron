@@ -41,21 +41,21 @@
 #ifndef KCRON_SETUP_H
 #define KCRON_SETUP_H 1
 
-#include <stdio.h>        /* for fprintf, fwrite, stderr, etc */
-#include <stdlib.h>       /* for EXIT_SUCCESS, EXIT_FAILURE   */
-#include <sys/prctl.h>    /* for prctl, PR_SET_DUMPABLE       */
-#include <sys/ptrace.h>   /* for ptrace                       */
-#include <sys/resource.h> /* for rlimit, RLIMIT_              */
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/prctl.h>
+#include <sys/ptrace.h>
+#include <sys/resource.h>
 
 #if USE_SECCOMP == 1
-#include "kcron_seccomp.h" /* for set_kcron_seccomp            */
+#include "kcron_seccomp.h"
 #endif
 
 #if USE_LANDLOCK == 1
-#include "kcron_landlock.h" /* for set_kcron_landlock           */
+#include "kcron_landlock.h"
 #endif
 
-#include "kcron_caps.h" /* for disable_capabilities         */
+#include "kcron_caps.h"
 
 int set_kcron_ulimits(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_ulimits(void) {
@@ -156,5 +156,4 @@ void harden_runtime(void) {
     exit(EXIT_FAILURE);
   }
 }
-
 #endif
