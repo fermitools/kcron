@@ -8,7 +8,7 @@ if [[ -r ~/.config/kcron ]]; then
     source ~/.config/kcron
 fi
 
-KEYTAB=$(${KEYTAB_NAME_UTIL})
+KEYTAB=$(${KEYTAB_NAME_UTIL:-/usr/libexec/kcron/client-keytab-name})
 ###########################################################
 #
 # Copyright 2023 Fermi Research Alliance, LLC
