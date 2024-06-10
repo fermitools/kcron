@@ -159,7 +159,7 @@ export KRB5CCNAME="KEYRING:session:${MYUID}:${SCRAMBLE}"
 #        Can I write to the keytab?
 ###########################################################
 echo 'Is the keytab writable?'
-if ! KEYTAB=$(${KEYTAB_INIT}); then
+if ! KEYTAB=$(${KEYTAB_INIT:-/usr/libexec/kcron/init-kcron-keytab}); then
     echo ''
     echo 'Keytab is not writable to this user:' >&2
     id >&2
