@@ -44,6 +44,10 @@ BuildRequires:	kernel-devel
 BuildRequires:	cmake >= 3.14
 BuildRequires:	asciidoc redhat-rpm-config coreutils bash gcc
 
+%if 0%{?rhel} < 9
+BuildRequires:	gcc-toolset-13 scl-utils
+%endif
+
 Requires:	krb5-workstation >= 1.11
 Requires:	util-linux coreutils
 
@@ -61,6 +65,10 @@ for running daemons and automatic jobs with kerberos rights.
 %if 0%{?rhel} < 9 && 0%{?fedora} < 31
 mkdir build
 cd build
+%endif
+
+%if 0%{?rhel} < 9
+source scl_source enable gcc-toolset-13
 %endif
 
 %cmake3 -Wdev \
