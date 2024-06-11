@@ -55,7 +55,7 @@
 #define _XOPEN_SOURCE 900
 
 #if USE_SYSTEMTAP == 1
-#include <sys/sdt.h> /* for DTRACE_PROBEs */
+#include <sys/sdt.h>
 #else
 
 #ifndef DTRACE_PROBE1
@@ -68,7 +68,7 @@
 #endif
 
 #if USE_SECCOMP == 1
-#include <linux/seccomp.h> /* for PR_SET_SECCOMP, SECCOMP_MODE_STRICT */
+#include <linux/seccomp.h>
 #endif
 
 #endif
