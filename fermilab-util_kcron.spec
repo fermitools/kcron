@@ -3,7 +3,12 @@
 %bcond_without libcap
 %bcond_without systemtap
 %bcond_without seccomp
+
+%if 0%{?rhel} < 9 && 0%{?fedora} < 31
+%bcond_with landlock
+%else
 %bcond_without landlock
+%endif
 
 Name:		fermilab-util_kcron
 
@@ -31,6 +36,9 @@ BuildRequires:	systemtap-sdt-devel
 %endif
 %if %{with seccomp}
 BuildRequires:	libseccomp-devel
+%endif
+%if %{with landlock}
+BuildRequires:	kernel-devel
 %endif
 
 BuildRequires:	cmake >= 3.14
