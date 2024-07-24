@@ -44,7 +44,7 @@ BuildRequires:	kernel-devel
 BuildRequires:	cmake >= 3.14
 BuildRequires:	asciidoc redhat-rpm-config coreutils bash gcc
 
-%if 0%{?rhel} < 9
+%if 0%{?rhel} < 10
 BuildRequires:	gcc-toolset-13 scl-utils
 %endif
 
@@ -67,7 +67,7 @@ mkdir build
 cd build
 %endif
 
-%if 0%{?rhel} < 9
+%if 0%{?rhel} < 10
 source scl_source enable gcc-toolset-13
 %endif
 
