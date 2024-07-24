@@ -44,7 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int write_empty_keytab(int filedescriptor) __attribute__((warn_unused_result));
+int write_empty_keytab(int filedescriptor) __attribute__((warn_unused_result)) __attribute__((fd_arg_write(1)));
 int write_empty_keytab(int filedescriptor) {
 
   if (filedescriptor == 0) {
