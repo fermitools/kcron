@@ -75,7 +75,7 @@ static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mo
 #else
   const cap_value_t caps[] = {-1};
 #endif
-  int num_caps = sizeof(caps) / sizeof(cap_value_t);
+  const int num_caps = sizeof(caps) / sizeof(cap_value_t);
 
   struct stat st = {0};
 
