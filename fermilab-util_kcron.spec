@@ -41,7 +41,7 @@ BuildRequires:	cmake >= 3.14
 BuildRequires:	asciidoc redhat-rpm-config coreutils bash gcc
 
 %if 0%{?rhel} < 10
-BuildRequires:	gcc-toolset-13 scl-utils
+BuildRequires:	gcc-toolset-15 scl-utils
 %endif
 
 Requires:	krb5-workstation >= 1.11
@@ -64,7 +64,7 @@ cd build
 %endif
 
 %if 0%{?rhel} < 10
-source scl_source enable gcc-toolset-13
+source scl_source enable gcc-toolset-15
 %endif
 
 %cmake3 -Wdev \
