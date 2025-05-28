@@ -54,13 +54,11 @@ int disable_capabilities(void) {
 
   if (cap_clear(capabilities)) {
     /* error */
-    DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 1);
     (void)cap_free(capabilities);
     (void)fprintf(stderr, "%s: Unable to clear CAPABILITIES\n", __PROGRAM_NAME);
     exit(EXIT_FAILURE);
   }
 
-  DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 0);
   (void)cap_free(capabilities);
   return 0;
 }
@@ -85,31 +83,25 @@ int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
   }
 
   if (cap_set_flag(capabilities, CAP_PERMITTED, num_caps, expected_cap, CAP_SET) == -1) {
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 1);
     (void)cap_free(capabilities);
     /* error */
     (void)print_cap_error("PERMITTED", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 0);
 
   if (cap_set_flag(capabilities, CAP_EFFECTIVE, num_caps, expected_cap, CAP_SET) == -1) {
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 1);
     (void)cap_free(capabilities);
     /* error */
     (void)print_cap_error("ACTIVE", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 0);
 
   if (cap_set_proc(capabilities) == -1) {
-    DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 1);
     (void)cap_free(capabilities);
     /* error */
     (void)print_cap_error("ACTIVE", expected_cap, num_caps);
     exit(EXIT_FAILURE);
   }
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 0);
 
   (void)cap_free(capabilities);
   return 0;
@@ -120,15 +112,11 @@ typedef int cap_value_t; /* so prototypes stay identical */
 /* If not caps, just return 0 */
 int disable_capabilities(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int disable_capabilities(void) {
-  DTRACE_PROBE1(__PROGRAM_NAME, "clear_cap", 2);
   return 0;
 }
 
 int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) __attribute__((nonnull(1))) __attribute__((warn_unused_result)) __attribute__((flatten)) __attribute__((access(read_only, 1))) __attribute__((access(read_only, 2)));
 int enable_capabilities(const cap_value_t expected_cap[], const int num_caps) {
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-permitted", 2);
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-flag-effective", 2);
-  DTRACE_PROBE1(__PROGRAM_NAME, "cap-set-active", 2);
   return 0;
 }
 #endif
