@@ -11,7 +11,7 @@
 
 Name:		fermilab-util_kcron
 
-Version:	1.8
+Version:	1.9
 Release:	1%{?dist}
 Summary:	A utility for getting Kerberos credentials in scheduled jobs
 
