@@ -54,19 +54,6 @@
 #define _GNU_SOURCE 0
 #define _XOPEN_SOURCE 900
 
-#if USE_SYSTEMTAP == 1
-#include <sys/sdt.h>
-#else
-
-#ifndef DTRACE_PROBE1
-#define DTRACE_PROBE1(a, b, c)
-#endif
-#ifndef DTRACE_PROBE2
-#define DTRACE_PROBE2(a, b, c, d)
-#endif
-
-#endif
-
 #if USE_SECCOMP == 1
 #include <linux/seccomp.h>
 #endif

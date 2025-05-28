@@ -1,7 +1,6 @@
 %define _hardened_build 1
 
 %bcond_without libcap
-%bcond_without systemtap
 %bcond_without seccomp
 
 %if 0%{?rhel} < 9 && 0%{?fedora} < 31
@@ -30,9 +29,6 @@ BuildRequires: checksec openssl procps-ng
 
 %if %{with libcap}
 BuildRequires:	libcap libcap-devel
-%endif
-%if %{with systemtap}
-BuildRequires:	systemtap-sdt-devel
 %endif
 %if %{with seccomp}
 BuildRequires:	libseccomp-devel
@@ -76,11 +72,6 @@ source scl_source enable gcc-toolset-13
  -DUSE_CAPABILITIES=ON \
 %else
  -DUSE_CAPABILITIES=OFF \
-%endif
-%if %{with systemtap}
- -DUSE_SYSTEMTAP=ON \
-%else
- -DUSE_SYSTEMTAP=OFF \
 %endif
 %if %{with seccomp}
  -DUSE_SECCOMP=ON \

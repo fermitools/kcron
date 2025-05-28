@@ -35,7 +35,6 @@ Optional Runtime Requirements:
 
   * libcap - for use of system capibilities rather than suid
   * libseccomp - for dropping any unused system calls
-  * systemtap - for tracing the capibilty calls within the kernel
 
 You are strongly encouraged to run with SELinux or AppArmor in enforcing mode to further protect the system from unknown exploits using this binaries enhanced privilege set.
 
@@ -50,7 +49,6 @@ Optional Build Requirements:
   * landlock headers - for filesystem level isolation
   * libcap headers - for use of system capibilities rather than suid
   * libseccomp headers - for dropping any unused system calls
-  * systemtap headers - for tracing the capibilty calls within the kernel
 
 You may change the `/var/kerberos/krb5/user/` to an alternate location at build time by setting `-DCLIENT_KEYTAB_DIR=/usr/local/var/kerberos/krb5/user/` on `cmake`.
 
