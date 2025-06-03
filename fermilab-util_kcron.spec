@@ -156,7 +156,7 @@ done
 * Tue Jun 11 2024 Pat Riehecky <riehecky@fnal.gov> - 1.8
 - update to 1.8
 
-* Tue Sep 6 2023 Pat Riehecky <riehecky@fnal.gov> - 1.7
+* Wed Sep 6 2023 Pat Riehecky <riehecky@fnal.gov> - 1.7
 - update to 1.7
 
 * Tue Sep 5 2023 Pat Riehecky <riehecky@fnal.gov> - 1.6
