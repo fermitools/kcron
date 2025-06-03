@@ -137,18 +137,36 @@ done
 %files
 %defattr(0644,root,root,0755)
 %doc %{_mandir}/man1/*
-%attr(0755,root,root) %{_bindir}/*
 %config(noreplace) %{_sysconfdir}/sysconfig/kcron
+%attr(0755,root,root) %{_bindir}/*
 %attr(0755,root,root) /usr/libexec/kcron/client-keytab-name
 
 %if %{with libcap}
 # If you can edit the memory this allocates, you can redirect the caps
 #  so we still suid to prevent this. user 'bin' is basically unusable anyway.
-%attr(4711,bin,root) %caps(cap_chown=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
+%attr(4755,bin,root) %caps(cap_chown=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
 %else
-%attr(4711,root,root) %{_libexecdir}/kcron/init-kcron-keytab
+%attr(4755,root,root) %{_libexecdir}/kcron/init-kcron-keytab
 %endif
 
-
 %changelog
+* Wed May 28 2025 Pat Riehecky <riehecky@fnal.gov> - 1.9
+- update to 1.9
 
+* Tue Jun 11 2024 Pat Riehecky <riehecky@fnal.gov> - 1.8
+- update to 1.8
+
+* Tue Sep 6 2023 Pat Riehecky <riehecky@fnal.gov> - 1.7
+- update to 1.7
+
+* Tue Sep 5 2023 Pat Riehecky <riehecky@fnal.gov> - 1.6
+- update to 1.6
+
+* Thu Aug 10 2023 Pat Riehecky <riehecky@fnal.gov> - 1.5
+- update to 1.5
+
+* Tue May 19 2020 Pat Riehecky <riehecky@fnal.gov> - 1.4
+- update to 1.4
+
+* Wed Feb 5 2020 Pat Riehecky <riehecky@fnal.gov> - 1.3
+- update to 1.3
