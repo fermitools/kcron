@@ -180,7 +180,7 @@ endif(FRAME_POINTER)
 CHECK_C_COMPILER_FLAG(-finline-functions INLINE_FUNCTIONS)
 if (INLINE_FUNCTIONS)
   add_compile_options(-finline-functions)
-  message(STATUS "Aggressibe inline functions: enabled")
+  message(STATUS "Aggressive inline functions: enabled")
 else ()
   message(WARNING "Compiler does not support -finline-functions")
 endif(INLINE_FUNCTIONS)
@@ -202,14 +202,6 @@ add_link_options(
 
 #############################
 # Compiler Hardening Flags
-
-# Fortify Source (only works with optimization enabled)
-if (NOT CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-    add_compile_options(-D_FORTIFY_SOURCE=2)
-    message(STATUS "Fortify source: enabled")
-else()
-    message(STATUS "Fortify source: disabled (debug build)")
-endif(NOT CMAKE_BUILD_TYPE STREQUAL "DEBUG")
 
 # Stack protector: ALL
 check_c_compiler_flag(-fstack-protector-all HAVE_SSP_ALL)
