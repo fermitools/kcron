@@ -196,8 +196,6 @@ add_link_options(
   -Wl,-z,relro          # Read-only relocations
   -Wl,-z,now            # Resolve all symbols at load time
   -Wl,-z,combreloc      # Combine relocation sections
-  -Wl,-z,ibt            # Fail at runtime if ibt fails
-  -Wl,-z,shstk          # Fail at runtime if no shadow stack
 )
 
 #############################
@@ -240,6 +238,10 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
   check_c_compiler_flag(-fcf-protection=full HAVE_CET)
   if (HAVE_CET)
     add_compile_options(-fcf-protection=full)
+    add_link_options(
+      -Wl,-z,ibt    # Fail at runtime if ibt fails
+      -Wl,-z,shstk  # Fail at runtime if no shadow stack
+    )
   else()
     message(FATAL_ERROR "Intel CET (-fcf-protection=full) required on x86_64")
   endif(HAVE_CET)
@@ -248,6 +250,9 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
   check_c_compiler_flag(-mbranch-protection=standard HAVE_BTI)
   if (HAVE_BTI)
     add_compile_options(-mbranch-protection=standard)
+    add_link_options(
+        -Wl,-z,bti-report=error  # Enforce BTI
+    )
   else()
     message(FATAL_ERROR "Branch Protection (-mbranch-protection=standard) required on aarch64")
   endif(HAVE_BTI)
