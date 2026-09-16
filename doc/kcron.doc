@@ -68,8 +68,11 @@ Configuration variables (sourced from these files):
 **FULLPRINCIPAL**::
   Complete principal name in the form +username/cron/host.domain@REALM+.
 
-**KEYTAB_INIT**::
-  Path to the keytab initialization utility (default: +/usr/libexec/kcron/init-kcron-keytab+).
+**KEYTAB_DIR_INIT**::
+  Path to the keytab directory initialization utility (default: +/usr/libexec/kcron/init-kerberos-client-dir+).
+
+**KEYTAB_CREATE**::
+  Path to the empty keytab creation utility (default: +/usr/libexec/kcron/create-empty-client-keytab+).
 
 **KEYTAB_NAME_UTIL**::
   Path to the keytab name utility (default: +/usr/libexec/kcron/client-keytab-name+).
@@ -106,9 +109,9 @@ Do you want to continue? (y/n)y
 
 == LIMITATIONS
 
-The kcron helper utilities utilize filesystem capabilities(7) stored as xattr(7) values on the binaries.  The application will not run as expected if your system does not support them.
+The kcron helper utilities utilize filesystem capabilities(7) stored as xattr(7) values on the binaries.  The application will not run as expected if your file system does not support them.
 
-On modern Linux systems, these are enabled by default.
+On modern Linux systems, these are enabled by default for most volumes.
 
 NFS does not support capabilities(7) nor should it.  However, if you set this SUID 'root', it will continue to work as expected.  It is a terrible idea to permit SUID applications to run SUID from network file systems.
 
