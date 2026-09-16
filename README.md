@@ -36,7 +36,7 @@ Optional Runtime Requirements:
 
   * libseccomp - for dropping any unused system calls
 
-You are strongly encouraged to run with SELinux or AppArmor in enforcing mode to further protect the system from unknown exploits using this binaries enhanced privilege set.
+You are strongly encouraged to run with SELinux or AppArmor in enforcing mode to further protect the system from unknown lateral movement exploits using this binary's enhanced privilege set.
 
 ## Build Requirements
 
