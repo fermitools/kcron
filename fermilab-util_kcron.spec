@@ -10,7 +10,7 @@
 
 Name:		fermilab-util_kcron
 
-Version:	2.0
+Version:	2.1
 Release:	1%{?dist}
 Summary:	A utility for getting Kerberos credentials in scheduled jobs
 
@@ -136,12 +136,16 @@ done
 %config(noreplace) %{_sysconfdir}/sysconfig/kcron
 %attr(0755,root,root) %{_bindir}/*
 %attr(0755,root,root) /usr/libexec/kcron/client-keytab-name
+%attr(0755,root,root) /usr/libexec/kcron/create-empty-client-keytab
 
 # If you can edit the memory this allocates, you can redirect the caps
 #  so we still suid to prevent this. user 'bin' is basically unusable anyway.
-%attr(4755,bin,root) %caps(cap_chown=p cap_dac_override=p) %{_libexecdir}/kcron/init-kcron-keytab
+%attr(4755,bin,root) %caps(cap_chown=p cap_dac_override=p) %{_libexecdir}/kcron/init-kerberos-client-dir
 
 %changelog
+* Wed Sep 16 2026 Pat Riehecky <riehecky@fnal.gov> - 2.1
+- Break out helper tools into smaller parts
+
 * Sat Jan 31 2026 Pat Riehecky <riehecky@fnal.gov> - 2.0
 - libcap now mandatory
 

@@ -128,6 +128,9 @@ add_compile_options(
 # Additional hardening for formats
 add_compile_options(-D_GLIBCXX_ASSERTIONS)
 
+# Enable source fortification for standard library functions
+add_compile_options(-D_FORTIFY_SOURCE=2)
+
 # Additional GCC features (not supported by all compilers)
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(
@@ -261,13 +264,16 @@ endif()
 #############################
 # Build Targets
 
-add_executable(init-kcron-keytab)
+add_executable(init-kerberos-client-dir)
+add_executable(create-empty-client-keytab)
 add_executable(client-keytab-name)
 
 #############################
 # Installation Configuration
 
-install(TARGETS init-kcron-keytab DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron
+install(TARGETS init-kerberos-client-dir DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+install(TARGETS create-empty-client-keytab DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
 install(TARGETS client-keytab-name DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
@@ -276,24 +282,45 @@ message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "Install libexec: ${CMAKE_INSTALL_LIBEXECDIR}")
 
 #############################
-# init-kcron-keytab Target Configuration
+# init-kerberos-client-dir Target Configuration
 
-target_compile_features(init-kcron-keytab PRIVATE
+target_compile_features(init-kerberos-client-dir PRIVATE
   c_std_17
   c_restrict
   c_function_prototypes
   c_static_assert
 )
 
-target_sources(init-kcron-keytab PRIVATE
-  ${PROJECT_SOURCE_DIR}/src/C/init-kcron-keytab.c
+target_sources(init-kerberos-client-dir PRIVATE
+  ${PROJECT_SOURCE_DIR}/src/C/init-kerberos-client-dir.c
 )
 
 # Link required libraries
-target_link_libraries(init-kcron-keytab PRIVATE cap)
+target_link_libraries(init-kerberos-client-dir PRIVATE cap)
 
 if (USE_SECCOMP)
-  target_link_libraries(init-kcron-keytab PRIVATE seccomp)
+  target_link_libraries(init-kerberos-client-dir PRIVATE seccomp)
+endif(USE_SECCOMP)
+
+#############################
+# create-empty-client-keytab Target Configuration
+
+target_compile_features(create-empty-client-keytab PRIVATE
+  c_std_17
+  c_restrict
+  c_function_prototypes
+  c_static_assert
+)
+
+target_sources(create-empty-client-keytab PRIVATE
+  ${PROJECT_SOURCE_DIR}/src/C/create-empty-client-keytab.c
+)
+
+# Link libcap so the runtime hardening path can drop any inherited capabilities.
+target_link_libraries(create-empty-client-keytab PRIVATE cap)
+
+if (USE_SECCOMP)
+  target_link_libraries(create-empty-client-keytab PRIVATE seccomp)
 endif(USE_SECCOMP)
 
 #############################
@@ -330,10 +357,8 @@ include_directories(${PROJECT_SOURCE_DIR}/src/C/)
 
 message(STATUS "")
 message(STATUS "=== SECURITY NOTICE ===")
-message(STATUS "init-kcron-keytab MUST be installed with file capabilities:")
-message(STATUS "  capabilities: setcap cap_chown,cap_dac_override=ep ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBEXECDIR}/kcron/init-kcron-keytab")
-message(STATUS "")
-message(STATUS "The program will drop privileges immediately after creating the keytab file.")
+message(STATUS "init-kerberos-client-dir MUST be installed with file capabilities:")
+message(STATUS "  capabilities: setcap cap_chown,cap_dac_override=ep ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBEXECDIR}/kcron/init-kerberos-client-dir")
 message(STATUS "======================")
 message(STATUS "")
 
