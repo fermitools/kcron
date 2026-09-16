@@ -168,7 +168,7 @@ void set_kcron_landlock(void) {
    */
   parent_fd = open(dirname(client_keytab_parent), O_RDONLY | O_NOFOLLOW | O_DIRECTORY | O_CLOEXEC);
   if (parent_fd < 0) {
-    (void)fprintf(stderr, "%s: Landlock cannot open parent directory %s: %s\n", __PROGRAM_NAME, client_keytab_parent, strerror(errno));
+    (void)fprintf(stderr, "%s: Landlock cannot open/read parent directory %s: %s\n", __PROGRAM_NAME, client_keytab_parent, strerror(errno));
     (void)free(client_keytab_parent);
     (void)free(client_keytab_dirname);
     (void)close(landlock_ruleset_fd);
