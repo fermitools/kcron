@@ -285,12 +285,20 @@ add_executable(client-keytab-name)
 #############################
 # Installation Configuration
 
+# init-kerberos-client-dir also needs cap_chown,cap_dac_override set via
+# setcap post-install (file capabilities aren't expressible via install()).
 install(TARGETS init-kerberos-client-dir DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE)
 install(TARGETS create-empty-client-keytab DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE)
 install(TARGETS client-keytab-name DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/kcron
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE)
 
 message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "Install libexec: ${CMAKE_INSTALL_LIBEXECDIR}")

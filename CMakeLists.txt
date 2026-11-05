@@ -5,11 +5,26 @@ project(kcron C)
 
 set(LANGUAGES "C")
 
-################################
-# Testing (CTest)
-enable_testing()
-include(CTest)
+include(FeatureSummary)
 
+set_package_properties(kcron PROPERTIES
+ URL "https://github.com/fermitools/kcron"
+ DESCRIPTION "A utility for getting Kerberos credentials in scheduled jobs")
+
+execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+####
+set(CPACK_PACKAGE_NAME "fermilab-util_${CMAKE_PROJECT_NAME}")
+set(CPACK_PACKAGE_CONTACT "fermilab <servicedesk@fnal.gov>")
+set(CPACK_PACKAGE_DESCRIPTION "A utility for getting Kerberos credentials in scheduled jobs")
+set(CPACK_PACKAGE_VERSION ${VERSION})
+
+set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/LICENSE)
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
+
+include(CPack)
+
+####
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
         "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE
@@ -18,33 +33,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-####
-# CMake modules
-include(FeatureSummary)
-
-set_package_properties(kcron PROPERTIES
- URL "https://github.com/fermitools/kcron"
- DESCRIPTION "A utility for getting Kerberos credentials in scheduled jobs")
-
-
-set(CPACK_PACKAGE_NAME "fermilab-util_${CMAKE_PROJECT_NAME}")
-set(CPACK_PACKAGE_CONTACT "fermilab <servicedesk@fnal.gov>")
-set(CPACK_PACKAGE_DESCRIPTION A utility for getting Kerberos credentials in scheduled jobs)
-set(CPACK_RPM_PACKAGE_DESCRIPTION A utility for getting Kerberos credentials in scheduled jobs)
-set(CPACK_PACKAGE_VERSION ${VERSION})
-set(CPACK_PACKAGE_RELEASE 1)
-
-set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/LICENSE)
-set(CPACK_RPM_PACKAGE_LICENSE MIT)
-set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
-set(CPACK_RPM_PACKAGE_RELOCATABLE OFF)
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
-
-set(CPACK_GENERATOR "RPM")
-include(CPack)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -58,6 +46,10 @@ endif(EXISTS "${LOC_PATH}")
 include(doc/CMakeLists.txt)
 include(src/C/CMakeLists.txt)
 include(src/shell/CMakeLists.txt)
+
+# Testing (CTest)
+enable_testing()
+include(CTest)
 add_subdirectory(test)
 
 ####
