@@ -25,10 +25,12 @@ set(TEST_INCLUDES "${CMAKE_SOURCE_DIR}/src/C"
 # ============================================================================
 set(HAVE_COVERAGE_TOOLS OFF)
 
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+# genhtml ships with lcov and is required by both toolchains, so search it
+# once here (not only inside the GCC branch) so the Clang branch can use it.
+find_program(LCOV_EXEC lcov)
+find_program(GENHTML_EXEC genhtml)
 
-  find_program(LCOV_EXEC lcov)
-  find_program(GENHTML_EXEC genhtml)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
   if(LCOV_EXEC AND GENHTML_EXEC)
     set(HAVE_COVERAGE_TOOLS ON)
@@ -256,14 +258,26 @@ if(BUILD_TESTING AND HAVE_COVERAGE_TOOLS)
 
   elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
 
-    set(PROFILE_DATA ${CMAKE_BINARY_DIR}/default.profdata)
-    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${PROFILE_DATA})
+    set(PROFILE_DATA ${CMAKE_BINARY_DIR}/coverage/default.profdata)
+    # Instrumented processes write their sparse .profraw here. CTest changes
+    # into the subdirectory that holds its CTestTestfile.cmake, so a relative
+    # LLVM_PROFILE_FILE would land in build/test (not build) and the merge step
+    # below could not find it; use an absolute pattern instead.
+    set(COVERAGE_PROF_RAW ${CMAKE_BINARY_DIR}/coverage-prof)
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${PROFILE_DATA}
+                                               ${COVERAGE_PROF_RAW})
 
     add_custom_target(
       coverage
-      COMMAND ${CMAKE_COMMAND} -E env LLVM_PROFILE_FILE=default.profraw
+      COMMAND ${CMAKE_COMMAND} -E rm -rf ${COVERAGE_PROF_RAW}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${COVERAGE_PROF_RAW}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${COVERAGE_OUTPUT_DIR}
+      # %p-%m gives each process (and each child spawned under it, e.g. the
+      # instrumented client-keytab-name) a unique file so runs never clobber
+      # one another, and the absolute path makes the cwd irrelevant.
+      COMMAND ${CMAKE_COMMAND} -E env LLVM_PROFILE_FILE=${COVERAGE_PROF_RAW}/default-%p-%m.profraw
               ${CMAKE_CTEST_COMMAND} --output-on-failure
-      COMMAND ${LLVM_PROFDATA_EXEC} merge -sparse default.profraw -o ${PROFILE_DATA}
+      COMMAND ${LLVM_PROFDATA_EXEC} merge -sparse ${COVERAGE_PROF_RAW}/*.profraw -o ${PROFILE_DATA}
       COMMAND ${LLVM_COV_EXEC} show ${UNIT_TEST_BINARIES} -instr-profile=${PROFILE_DATA}
               -format=html -output-dir=${COVERAGE_OUTPUT_DIR}
       COMMAND ${LLVM_COV_EXEC} report ${UNIT_TEST_BINARIES}

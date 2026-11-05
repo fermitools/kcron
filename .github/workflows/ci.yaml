@@ -18,7 +18,21 @@ jobs:
     container:
       image: fedora:latest
 
-    name: Test compile
+    # Build and test under each supported C compiler. CTest, checksec, and the
+    # coverage target in test/CMakeLists.txt already branch on the compiler, so
+    # selecting CC here exercises the full pipeline for both toolchains.
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - gcc
+          - clang
+
+    env:
+      # Forward the chosen compiler to CMake via CC.
+      CC: ${{ matrix.compiler }}
+
+    name: Test compile (${{ matrix.compiler }})
 
     steps:
       - name: Install build dependencies
@@ -37,6 +51,10 @@ jobs:
             bats \
             hostname \
             lcov
+          # clang + LLVM coverage tools.
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            dnf -y install clang clang-devel llvm
+          fi
 
       - name: Checkout
         uses: actions/checkout@v6

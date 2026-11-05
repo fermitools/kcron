@@ -73,6 +73,13 @@
  *
  * Security Principle: Default deny with explicit allow. If it's not in the list,
  * it can't be used. This is defense-in-depth against exploitation.
+ *
+ * Note on argument-restricted rules: SCMP_A0()/SCMP_A1() build a
+ * "struct scmp_arg_cmp" from only three fields (arg, op, datum_a). datum_b is
+ * now supplied explicitly as 0 so the call compiles identically under GCC and
+ * Clang; Clang otherwise reports -Wmissing-field-initializers on the omitted
+ * trailing field (GCC tolerates it, which is exactly why the omission is not
+ * obvious on the host build). datum_b is unused for SCMP_CMP_EQ.
  */
 int set_kcron_seccomp(void) __attribute__((warn_unused_result)) __attribute__((flatten));
 int set_kcron_seccomp(void) {
@@ -151,14 +158,14 @@ int set_kcron_seccomp(void) {
    */
 
   /* Write to stdout - for printing keytab path */
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 1)) != 0) {
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 1, 0)) != 0) {
     (void)fprintf(stderr, "%s: Cannot allowlist 'write' to stdout: %s\n", __PROGRAM_NAME, strerror(errno));
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
 
   /* Write to stderr - for error messages */
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 2)) != 0) {
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 2, 0)) != 0) {
     (void)fprintf(stderr, "%s: Cannot allowlist 'write' to stderr: %s\n", __PROGRAM_NAME, strerror(errno));
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
@@ -180,7 +187,7 @@ int set_kcron_seccomp(void) {
   }
 
   /* Close directory handle (fd 3) */
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 1, SCMP_A0(SCMP_CMP_EQ, 3)) != 0) {
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 1, SCMP_A0(SCMP_CMP_EQ, 3, 0)) != 0) {
     (void)fprintf(stderr, "%s: Cannot allowlist 'close' for fd 3: %s\n", __PROGRAM_NAME, strerror(errno));
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
@@ -192,21 +199,21 @@ int set_kcron_seccomp(void) {
    */
 
   /* Write to keytab file (fd 4) */
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0(SCMP_CMP_EQ, 4, 0)) != 0) {
     (void)fprintf(stderr, "%s: Cannot allowlist 'write' to fd 4: %s\n", __PROGRAM_NAME, strerror(errno));
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
 
   /* Close keytab file (fd 4) */
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 1, SCMP_A0(SCMP_CMP_EQ, 4, 0)) != 0) {
     (void)fprintf(stderr, "%s: Cannot allowlist 'close' for fd 4: %s\n", __PROGRAM_NAME, strerror(errno));
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
   }
 
   /* Sync keytab file to disk (fd 4) */
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fsync), 1, SCMP_A0(SCMP_CMP_EQ, 4)) != 0) {
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fsync), 1, SCMP_A0(SCMP_CMP_EQ, 4, 0)) != 0) {
     (void)fprintf(stderr, "%s: Cannot allowlist 'fsync' for fd 4: %s\n", __PROGRAM_NAME, strerror(errno));
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
@@ -216,7 +223,7 @@ int set_kcron_seccomp(void) {
    * Set permissions on keytab file (fd 4) to 0600.
    * Restricts to exactly mode 0600 (user read/write only).
    */
-  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fchmod), 2, SCMP_A0(SCMP_CMP_EQ, 4), SCMP_A1(SCMP_CMP_EQ, _0600)) != 0) {
+  if (seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(fchmod), 2, SCMP_A0(SCMP_CMP_EQ, 4, 0), SCMP_A1(SCMP_CMP_EQ, _0600, 0)) != 0) {
     (void)fprintf(stderr, "%s: Cannot allowlist 'fchmod' for mode 0600: %s\n", __PROGRAM_NAME, strerror(errno));
     (void)seccomp_release(ctx);
     exit(EXIT_FAILURE);
