@@ -82,7 +82,6 @@ static void free_buffers(char *keytab, char *keytab_dirname, char *keytab_filena
   }
 }
 
-
 int main(void) {
   char *keytab = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));
   char *keytab_dirname = calloc(FILE_PATH_MAX_LENGTH + 3, sizeof(char));

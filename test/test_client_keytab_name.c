@@ -68,8 +68,7 @@ static int compute_expected(char *buf, size_t n) {
   if (snprintf(uid_str, sizeof(uid_str), "%u", (unsigned)getuid()) < 0) {
     return -1;
   }
-  if (snprintf(dirname, sizeof(dirname), "%s/%s", __CLIENT_KEYTAB_DIR,
-               uid_str) < 0) {
+  if (snprintf(dirname, sizeof(dirname), "%s/%s", __CLIENT_KEYTAB_DIR, uid_str) < 0) {
     return -1;
   }
   if (snprintf(path, sizeof(path), "%s/client.keytab", dirname) < 0) {
@@ -88,11 +87,9 @@ TEST(binary_prints_expected_path) {
   (void)memset(out, 0, sizeof(out));
   (void)memset(expected, 0, sizeof(expected));
 
-  TEST_ASSERT_EQ(run_binary(out, sizeof(out)), 0,
-                 "binary must exit successfully and print the path");
+  TEST_ASSERT_EQ(run_binary(out, sizeof(out)), 0, "binary must exit successfully and print the path");
 
-  TEST_ASSERT_EQ(compute_expected(expected, sizeof(expected)), 0,
-                 "expected-path computation must succeed");
+  TEST_ASSERT_EQ(compute_expected(expected, sizeof(expected)), 0, "expected-path computation must succeed");
 
   /* strip the trailing newline captured from stdout */
   size_t len = strlen(out);
@@ -100,8 +97,7 @@ TEST(binary_prints_expected_path) {
     out[len - 1] = '\0';
   }
 
-  TEST_ASSERT_STR_EQ(out, expected,
-                     "binary stdout must equal the derived keytab path");
+  TEST_ASSERT_STR_EQ(out, expected, "binary stdout must equal the derived keytab path");
 }
 
 TEST(binary_output_has_no_extra_lines) {

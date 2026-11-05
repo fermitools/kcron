@@ -81,14 +81,9 @@ static void make_regular_file(const char *file_path) {
  * validate_client_dirname
  * ============================================================================ */
 
-TEST(validate_client_dirname_null_is_rejected) {
-  TEST_ASSERT_EQ(validate_client_dirname(NULL), 1, "NULL directory must be rejected");
-}
+TEST(validate_client_dirname_null_is_rejected) { TEST_ASSERT_EQ(validate_client_dirname(NULL), 1, "NULL directory must be rejected"); }
 
-TEST(validate_client_dirname_missing_is_rejected) {
-  TEST_ASSERT_EQ(validate_client_dirname("/this/does/not/exist/kron"), 1,
-                 "non-existent directory must be rejected");
-}
+TEST(validate_client_dirname_missing_is_rejected) { TEST_ASSERT_EQ(validate_client_dirname("/this/does/not/exist/kron"), 1, "non-existent directory must be rejected"); }
 
 TEST(validate_client_dirname_symlink_is_rejected) {
   char *dir = make_temp_dir();
@@ -116,14 +111,9 @@ TEST(validate_client_dirname_real_directory_is_accepted) {
  * validate_keytab_directory
  * ============================================================================ */
 
-TEST(validate_keytab_directory_null_is_rejected) {
-  TEST_ASSERT_EQ(validate_keytab_directory(NULL), 1, "NULL directory must be rejected");
-}
+TEST(validate_keytab_directory_null_is_rejected) { TEST_ASSERT_EQ(validate_keytab_directory(NULL), 1, "NULL directory must be rejected"); }
 
-TEST(validate_keytab_directory_missing_is_rejected) {
-  TEST_ASSERT_EQ(validate_keytab_directory("/no/such/path/kron_keytab"), 1,
-                 "non-existent directory must be rejected");
-}
+TEST(validate_keytab_directory_missing_is_rejected) { TEST_ASSERT_EQ(validate_keytab_directory("/no/such/path/kron_keytab"), 1, "non-existent directory must be rejected"); }
 
 TEST(validate_keytab_directory_symlink_is_rejected) {
   char *dir = make_temp_dir();
@@ -164,10 +154,7 @@ TEST(validate_keytab_directory_real_directory_is_accepted) {
  * create_keytab_file
  * ============================================================================ */
 
-TEST(create_keytab_file_null_dirname_rejected) {
-  TEST_ASSERT_EQ(create_keytab_file(NULL, "client.keytab", "/x"), 1,
-                 "NULL dirname must be rejected");
-}
+TEST(create_keytab_file_null_dirname_rejected) { TEST_ASSERT_EQ(create_keytab_file(NULL, "client.keytab", "/x"), 1, "NULL dirname must be rejected"); }
 
 TEST(create_keytab_file_null_filename_rejected) {
   char *dir = make_temp_dir();
@@ -179,16 +166,11 @@ TEST(create_keytab_file_null_filename_rejected) {
 TEST(create_keytab_file_null_keytab_rejected) {
   char *dir = make_temp_dir();
 
-  TEST_ASSERT_EQ(create_keytab_file(dir, "client.keytab", NULL), 1,
-                 "NULL keytab path must be rejected");
+  TEST_ASSERT_EQ(create_keytab_file(dir, "client.keytab", NULL), 1, "NULL keytab path must be rejected");
   free(dir);
 }
 
-TEST(create_keytab_file_missing_dir_rejected) {
-  TEST_ASSERT_EQ(create_keytab_file("/no/such/dir/kron", "client.keytab",
-                                    "/no/such/dir/kron/1/client.keytab"),
-                 1, "non-existent directory must be rejected");
-}
+TEST(create_keytab_file_missing_dir_rejected) { TEST_ASSERT_EQ(create_keytab_file("/no/such/dir/kron", "client.keytab", "/no/such/dir/kron/1/client.keytab"), 1, "non-existent directory must be rejected"); }
 
 TEST(create_keytab_file_symlink_dir_rejected) {
   char *dir = make_temp_dir();

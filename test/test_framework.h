@@ -8,7 +8,7 @@
  * Creative Commons Public Domain Dedication and Certification (CC-PDDC).
  * This license applies only to the framework, not uses of the framework.
  *
- * Minimal TAP 14–compliant unit test framework (fork-isolated).
+ * Minimal TAP 14-compliant unit test framework (fork-isolated).
  *
  * Features:
  *   - TAP version 14 output
@@ -97,67 +97,66 @@ static int _test_registry_count = 0;
  * ============================================================================
  */
 
-#define TEST_ASSERT_EQ(actual, expected, msg)                                  \
-  do {                                                                         \
-    long _a = (long)(actual);                                                  \
-    long _e = (long)(expected);                                                \
-    if (_a != _e) {                                                            \
-      fprintf(stderr, "# FAIL: %s:%d\n", __FILE__, __LINE__);                  \
-      fprintf(stderr, "#   Expected: %ld\n", _e);                              \
-      fprintf(stderr, "#   Got:      %ld\n", _a);                              \
-      fprintf(stderr, "#   %s\n", msg);                                        \
-      exit(1);                                                                 \
-    }                                                                          \
+#define TEST_ASSERT_EQ(actual, expected, msg)                                                                                                                                                                                                  \
+  do {                                                                                                                                                                                                                                         \
+    long _a = (long)(actual);                                                                                                                                                                                                                  \
+    long _e = (long)(expected);                                                                                                                                                                                                                \
+    if (_a != _e) {                                                                                                                                                                                                                            \
+      fprintf(stderr, "# FAIL: %s:%d\n", __FILE__, __LINE__);                                                                                                                                                                                  \
+      fprintf(stderr, "#   Expected: %ld\n", _e);                                                                                                                                                                                              \
+      fprintf(stderr, "#   Got:      %ld\n", _a);                                                                                                                                                                                              \
+      fprintf(stderr, "#   %s\n", msg);                                                                                                                                                                                                        \
+      exit(1);                                                                                                                                                                                                                                 \
+    }                                                                                                                                                                                                                                          \
   } while (0)
 
-#define TEST_ASSERT_NOT_EQ(actual, expected, msg)                              \
-  do {                                                                         \
-    long _a = (long)(actual);                                                  \
-    long _e = (long)(expected);                                                \
-    if (_a == _e) {                                                            \
-      fprintf(stderr, "# FAIL: %s:%d\n", __FILE__, __LINE__);                  \
-      fprintf(stderr, "#   Should not equal: %ld\n", _e);                      \
-      fprintf(stderr, "#   Got:              %ld\n", _a);                      \
-      fprintf(stderr, "#   %s\n", msg);                                        \
-      exit(1);                                                                 \
-    }                                                                          \
+#define TEST_ASSERT_NOT_EQ(actual, expected, msg)                                                                                                                                                                                              \
+  do {                                                                                                                                                                                                                                         \
+    long _a = (long)(actual);                                                                                                                                                                                                                  \
+    long _e = (long)(expected);                                                                                                                                                                                                                \
+    if (_a == _e) {                                                                                                                                                                                                                            \
+      fprintf(stderr, "# FAIL: %s:%d\n", __FILE__, __LINE__);                                                                                                                                                                                  \
+      fprintf(stderr, "#   Should not equal: %ld\n", _e);                                                                                                                                                                                      \
+      fprintf(stderr, "#   Got:              %ld\n", _a);                                                                                                                                                                                      \
+      fprintf(stderr, "#   %s\n", msg);                                                                                                                                                                                                        \
+      exit(1);                                                                                                                                                                                                                                 \
+    }                                                                                                                                                                                                                                          \
   } while (0)
 
-#define TEST_ASSERT_STR_EQ(actual, expected, msg)                              \
-  do {                                                                         \
-    const char *_a = (actual);                                                 \
-    const char *_e = (expected);                                               \
-    if (_a == NULL || _e == NULL) {                                            \
-      fprintf(stderr, "# FAIL: %s:%d\n", __FILE__, __LINE__);                  \
-      fprintf(stderr, "#   %s\n", msg);                                        \
-      exit(1);                                                                 \
-    }                                                                          \
-    if (strcmp(_a, _e) != 0) {                                                 \
-      fprintf(stderr, "# FAIL: %s:%d: strings differ\n", __FILE__, __LINE__);  \
-      fprintf(stderr, "#   Expected: \"%s\"\n", _e);                           \
-      fprintf(stderr, "#   Got:      \"%s\"\n", _a);                           \
-      fprintf(stderr, "#   %s\n", msg);                                        \
-      exit(1);                                                                 \
-    }                                                                          \
+#define TEST_ASSERT_STR_EQ(actual, expected, msg)                                                                                                                                                                                              \
+  do {                                                                                                                                                                                                                                         \
+    const char *_a = (actual);                                                                                                                                                                                                                 \
+    const char *_e = (expected);                                                                                                                                                                                                               \
+    if (_a == NULL || _e == NULL) {                                                                                                                                                                                                            \
+      fprintf(stderr, "# FAIL: %s:%d\n", __FILE__, __LINE__);                                                                                                                                                                                  \
+      fprintf(stderr, "#   %s\n", msg);                                                                                                                                                                                                        \
+      exit(1);                                                                                                                                                                                                                                 \
+    }                                                                                                                                                                                                                                          \
+    if (strcmp(_a, _e) != 0) {                                                                                                                                                                                                                 \
+      fprintf(stderr, "# FAIL: %s:%d: strings differ\n", __FILE__, __LINE__);                                                                                                                                                                  \
+      fprintf(stderr, "#   Expected: \"%s\"\n", _e);                                                                                                                                                                                           \
+      fprintf(stderr, "#   Got:      \"%s\"\n", _a);                                                                                                                                                                                           \
+      fprintf(stderr, "#   %s\n", msg);                                                                                                                                                                                                        \
+      exit(1);                                                                                                                                                                                                                                 \
+    }                                                                                                                                                                                                                                          \
   } while (0)
 
-#define TEST_ASSERT_STR_NOT_EQ(actual, expected, msg)                          \
-  do {                                                                         \
-    const char *_a = (actual);                                                 \
-    const char *_e = (expected);                                               \
-    if (_a == NULL || _e == NULL) {                                            \
-      fprintf(stderr, "# FAIL: %s:%d\n", __FILE__, __LINE__);                  \
-      fprintf(stderr, "#   %s\n", msg);                                        \
-      exit(1);                                                                 \
-    }                                                                          \
-    if (strcmp(_a, _e) == 0) {                                                 \
-      fprintf(stderr, "# FAIL: %s:%d: strings should differ\n", __FILE__,      \
-              __LINE__);                                                       \
-      fprintf(stderr, "#   Should not equal: \"%s\"\n", _e);                   \
-      fprintf(stderr, "#   Got:              \"%s\"\n", _a);                   \
-      fprintf(stderr, "#   %s\n", msg);                                        \
-      exit(1);                                                                 \
-    }                                                                          \
+#define TEST_ASSERT_STR_NOT_EQ(actual, expected, msg)                                                                                                                                                                                          \
+  do {                                                                                                                                                                                                                                         \
+    const char *_a = (actual);                                                                                                                                                                                                                 \
+    const char *_e = (expected);                                                                                                                                                                                                               \
+    if (_a == NULL || _e == NULL) {                                                                                                                                                                                                            \
+      fprintf(stderr, "# FAIL: %s:%d\n", __FILE__, __LINE__);                                                                                                                                                                                  \
+      fprintf(stderr, "#   %s\n", msg);                                                                                                                                                                                                        \
+      exit(1);                                                                                                                                                                                                                                 \
+    }                                                                                                                                                                                                                                          \
+    if (strcmp(_a, _e) == 0) {                                                                                                                                                                                                                 \
+      fprintf(stderr, "# FAIL: %s:%d: strings should differ\n", __FILE__, __LINE__);                                                                                                                                                           \
+      fprintf(stderr, "#   Should not equal: \"%s\"\n", _e);                                                                                                                                                                                   \
+      fprintf(stderr, "#   Got:              \"%s\"\n", _a);                                                                                                                                                                                   \
+      fprintf(stderr, "#   %s\n", msg);                                                                                                                                                                                                        \
+      exit(1);                                                                                                                                                                                                                                 \
+    }                                                                                                                                                                                                                                          \
   } while (0)
 
 /* ============================================================================
@@ -168,15 +167,15 @@ static int _test_registry_count = 0;
 #define TEST(name) static void test_##name(void)
 
 /* Register a test - must be called inside main() */
-#define RUN_TEST(test_name)                                                    \
-  do {                                                                         \
-    if (_test_registry_count >= MAX_TESTS) {                                   \
-      fprintf(stderr, "Too many tests registered\n");                          \
-      exit(EXIT_FAILURE);                                                      \
-    }                                                                          \
-    _test_registry[_test_registry_count].name = #test_name;                    \
-    _test_registry[_test_registry_count].func = test_##test_name;              \
-    _test_registry_count++;                                                    \
+#define RUN_TEST(test_name)                                                                                                                                                                                                                    \
+  do {                                                                                                                                                                                                                                         \
+    if (_test_registry_count >= MAX_TESTS) {                                                                                                                                                                                                   \
+      fprintf(stderr, "Too many tests registered\n");                                                                                                                                                                                          \
+      exit(EXIT_FAILURE);                                                                                                                                                                                                                      \
+    }                                                                                                                                                                                                                                          \
+    _test_registry[_test_registry_count].name = #test_name;                                                                                                                                                                                    \
+    _test_registry[_test_registry_count].func = test_##test_name;                                                                                                                                                                              \
+    _test_registry_count++;                                                                                                                                                                                                                    \
   } while (0)
 
 /* ============================================================================
@@ -236,8 +235,7 @@ static inline void _filter_add(struct _test_filter *f, const char *pattern) {
   f->patterns[f->count++] = strdup(pattern);
 }
 
-static inline int _filter_matches(const struct _test_filter *f,
-                                  const char *name) {
+static inline int _filter_matches(const struct _test_filter *f, const char *name) {
   if (f->count == 0)
     return 1; /* No filter = match all */
 
@@ -297,8 +295,7 @@ static inline int _run_test_isolated(const char *name, void (*func)(void)) {
     clock_gettime(CLOCK_MONOTONIC, &end);
 
     /* Cast to double to avoid -Wconversion warnings */
-    duration = (double)(end.tv_sec - start.tv_sec) +
-               (double)(end.tv_nsec - start.tv_nsec) / 1e9;
+    duration = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_nsec - start.tv_nsec) / 1e9;
   }
 
   if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
@@ -312,8 +309,7 @@ static inline int _run_test_isolated(const char *name, void (*func)(void)) {
   } else {
     if (WIFSIGNALED(status) && WTERMSIG(status) == SIGALRM) {
       if (_test_config.show_duration) {
-        printf("not ok %d - %s # TIMEOUT (>%ds)\n", _test_state.current, name,
-               _test_config.timeout_seconds);
+        printf("not ok %d - %s # TIMEOUT (>%ds)\n", _test_state.current, name, _test_config.timeout_seconds);
       } else {
         printf("not ok %d - %s # TIMEOUT\n", _test_state.current, name);
       }
@@ -355,8 +351,7 @@ static inline int _test_execute_all(struct _test_filter *filter) {
 
     _test_state.current++;
 
-    if (_run_test_isolated(_test_registry[i].name, _test_registry[i].func) !=
-        0) {
+    if (_run_test_isolated(_test_registry[i].name, _test_registry[i].func) != 0) {
       _test_state.failed++;
     }
   }
@@ -371,10 +366,7 @@ static inline int _test_execute_all(struct _test_filter *filter) {
  */
 
 /* Initialize test framework - call at start of main() */
-static inline void _test_init(int argc, char **argv,
-                              struct _test_filter *filter, int default_timeout,
-                              bool default_verbose,
-                              bool default_show_duration) {
+static inline void _test_init(int argc, char **argv, struct _test_filter *filter, int default_timeout, bool default_verbose, bool default_show_duration) {
   _filter_init(filter);
 
   /* Set defaults */
@@ -398,19 +390,15 @@ static inline void _test_init(int argc, char **argv,
       _test_config.show_duration = true;
       break;
     case 'h':
-      fprintf(stderr, "Usage: %s [-svd] [-t timeout] [test1 test2 ...]\n",
-              argv[0]);
+      fprintf(stderr, "Usage: %s [-svd] [-t timeout] [test1 test2 ...]\n", argv[0]);
       fprintf(stderr, "  -s          Show test stdout/stderr\n");
-      fprintf(stderr,
-              "  -t SECONDS  Set per-test timeout (0=disabled, default=%d)\n",
-              default_timeout);
+      fprintf(stderr, "  -t SECONDS  Set per-test timeout (0=disabled, default=%d)\n", default_timeout);
       fprintf(stderr, "  -v          Verbose output\n");
       fprintf(stderr, "  -d          Show test duration\n");
       fprintf(stderr, "  -h          Show this help\n");
       exit(EXIT_SUCCESS);
     default:
-      fprintf(stderr, "Usage: %s [-svd] [-t timeout] [test1 test2 ...]\n",
-              argv[0]);
+      fprintf(stderr, "Usage: %s [-svd] [-t timeout] [test1 test2 ...]\n", argv[0]);
       exit(EXIT_FAILURE);
     }
   }
@@ -424,12 +412,9 @@ static inline void _test_init(int argc, char **argv,
   if (_test_config.verbose) {
     fprintf(stderr, "# Test configuration:\n");
     fprintf(stderr, "#   Timeout: %d seconds\n", _test_config.timeout_seconds);
-    fprintf(stderr, "#   Verbose: %s\n",
-            _test_config.verbose ? "enabled" : "disabled");
-    fprintf(stderr, "#   Show duration: %s\n",
-            _test_config.show_duration ? "enabled" : "disabled");
-    fprintf(stderr, "#   Show outputs: %s\n",
-            _show_test_outputs ? "enabled" : "disabled");
+    fprintf(stderr, "#   Verbose: %s\n", _test_config.verbose ? "enabled" : "disabled");
+    fprintf(stderr, "#   Show duration: %s\n", _test_config.show_duration ? "enabled" : "disabled");
+    fprintf(stderr, "#   Show outputs: %s\n", _show_test_outputs ? "enabled" : "disabled");
   }
 
   _test_state.current = 0;
@@ -437,8 +422,8 @@ static inline void _test_init(int argc, char **argv,
   _test_registry_count = 0;
 }
 
-#define TEST_INIT(timeout, verbose, show_duration)                             \
-  struct _test_filter filter;                                                  \
+#define TEST_INIT(timeout, verbose, show_duration)                                                                                                                                                                                             \
+  struct _test_filter filter;                                                                                                                                                                                                                  \
   _test_init(argc, argv, &filter, timeout, verbose, show_duration)
 
 /* Execute all registered tests */

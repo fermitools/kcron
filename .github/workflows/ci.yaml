@@ -13,8 +13,35 @@ on:
       - main
 
 jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+
+    # clang-format reads the repository's .clang-format and reflows to its
+    # ColumnLimit. --dry-run discards the output and --Werror makes clang-format
+    # exit non-zero if any tracked source file would be changed, so this job
+    # fails (rather than silently reformatting) whenever the tree drifts.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install clang-format
+        run: |
+          dnf -y update
+          dnf -y install clang-tools-extra findutils
+
+      # Enumerate sources with find rather than `git ls-files`: actions/checkout
+      # downloads the tree as a plain archive inside the container (git is not
+      # present at checkout time), so no .git directory exists for git to read.
+      # Running from the checkout root makes the repo's .clang-format apply.
+      - name: Verify formatting
+        run: find . -type f \( -name '*.c' -o -name '*.h' \) -exec clang-format --dry-run --Werror {} +
+
   build-test:
     runs-on: ubuntu-latest
+    # Compile/test will not run until formatting passes.
+    needs: clang-format
     container:
       image: fedora:latest
 
