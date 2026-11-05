@@ -91,7 +91,11 @@ int validate_client_dirname(const char *client_keytab_dirname) {
  * Security Note: lstat() is used first (not stat()) to avoid a TOCTOU symlink
  * race that could substitute an attacker-controlled path.
  */
-int validate_keytab_directory(const char *keytab_dirname) __attribute__((access(read_only, 1))) __attribute__((warn_unused_result));
+int validate_keytab_directory(const char *keytab_dirname)
+#if !defined(__clang__)
+    __attribute__((access(read_only, 1)))
+#endif
+    __attribute__((warn_unused_result));
 int validate_keytab_directory(const char *keytab_dirname) {
   struct stat lst = {0};
   struct stat st = {0};

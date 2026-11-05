@@ -114,6 +114,8 @@ add_compile_options(
   -Walloca                               # Warn on suspicious alloca usage
   -Wcast-qual                            # Warn on cast removing const/volatile
   -Wcast-align                           # Warn on alignment-affecting casts
+  -Wdouble-promotion                     # Implicit float-to-double promotion
+  -Wmissing-field-initializers           # Struct fields left uninitialized
   -Wwrite-strings                        # String literals are const
   -Wundef                                # Undefined macro in #if
   -Wmissing-prototypes                   # Missing function prototypes
@@ -140,6 +142,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
         -Wduplicated-branches              # Duplicated branches
         -Wnull-dereference                 # Potential NULL dereferences
         -Wjump-misses-init                 # Jump skips variable initialization
+        -Warith-conversion                 # Implicit arithmetic conversions
+        -Wstringop-overflow                # String ops writing past buffer end
+        -Wtrampolines                      # Nested functions needing exec stack
     )
 
   check_c_compiler_flag(-fplugin=annobin SET_ANNOBIN)
@@ -222,12 +227,20 @@ else ()
   message(WARNING "Stack clash protection not supported by compiler")
 endif(STACK_CLASH)
 
-# Disable stack slot reuse
+# Disable stack slot reuse.
+# This is a GCC-only hardening flag: it prevents the compiler from
+# reusing a single stack frame for nested calls, which would let a
+# stack-clash attack defeat -fstack-clash-protection. Clang provides
+# no equivalent option, so on Clang -fstack-clash-protection (enabled
+# above) is the sole defense and this flag is skipped instead of aborting.
 CHECK_C_COMPILER_FLAG(-fstack-reuse=none STACK_REUSE)
 if (STACK_REUSE)
   add_compile_options(-fstack-reuse=none)
-else ()
+  message(STATUS "Stack slot reuse disabled: enabled")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
   message(FATAL_ERROR "Required compiler flag '-fstack-reuse=none' not supported")
+else ()
+  message(WARNING "Clang does not support '-fstack-reuse=none'; relying on -fstack-clash-protection")
 endif(STACK_REUSE)
 
 # Zero call-used registers on return

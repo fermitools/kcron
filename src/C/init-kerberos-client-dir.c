@@ -89,7 +89,11 @@ static void free_buffers(char *keytab, char *keytab_dirname, char *keytab_filena
   }
 }
 
-static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) __attribute__((access(read_only, 1))) __attribute__((warn_unused_result));
+static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode)
+#if !defined(__clang__)
+    __attribute__((access(read_only, 1)))
+#endif
+    __attribute__((warn_unused_result));
 static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mode) {
   const cap_value_t caps_dac_override[] = {CAP_DAC_OVERRIDE};
   const int num_caps_dac_override = sizeof(caps_dac_override) / sizeof(cap_value_t);
