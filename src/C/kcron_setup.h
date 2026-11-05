@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MIT */
 /*
  *
  * Runtime hardening setup functions including ulimits, seccomp, and landlock
