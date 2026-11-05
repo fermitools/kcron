@@ -289,9 +289,10 @@ TEST(create_keytab_file_existing_directory_rejected) {
   (void)memset(path, 0, sizeof(path));
   (void)snprintf(name, sizeof(name), "client.keytab");
 
-  /* Put a *directory* where the file is expected: openat(O_CREAT | O_EXCL)
-   * against a directory fails with EISDIR, exercising the non-EEXIST error
-   * branch instead of only the already-exists path. */
+  /* Put a *directory* where the file is expected. With O_CREAT | O_EXCL the
+   * pre-existing entry yields EEXIST, so this exercises the "already exists"
+   * message branch (same outcome as create_keytab_file_existing_file_is_rejected
+   * but through a directory instead of a regular file). */
   (void)snprintf(sub, sizeof(sub), "%s/client.keytab", dir);
   if (mkdir(sub, 0700) != 0) {
     free(dir);
@@ -303,6 +304,32 @@ TEST(create_keytab_file_existing_directory_rejected) {
   TEST_ASSERT_EQ(rc, 1, "an existing directory in the target path must be rejected");
 
   (void)rmdir(sub);
+  free(dir);
+}
+
+TEST(create_keytab_file_enotdir_rejected) {
+  char *dir = make_temp_dir();
+  char name[FILE_PATH_MAX_LENGTH];
+  char block[FILE_PATH_MAX_LENGTH];
+  char path[FILE_PATH_MAX_LENGTH];
+  int rc;
+
+  (void)memset(name, 0, sizeof(name));
+  (void)memset(block, 0, sizeof(block));
+  (void)memset(path, 0, sizeof(path));
+  (void)snprintf(name, sizeof(name), "blocker/child");
+
+  /* A regular file occupies the leading path component, so openat() on
+   * "blocker/child" fails with ENOTDIR rather than EEXIST, exercising the
+   * generic error message branch (strerror) rather than the already-exists one. */
+  (void)snprintf(block, sizeof(block), "%s/blocker", dir);
+  make_regular_file(block);
+
+  (void)snprintf(path, sizeof(path), "%s/blocker/child", dir);
+  rc = create_keytab_file(dir, name, path);
+  TEST_ASSERT_EQ(rc, 1, "a non-directory path component must be rejected");
+
+  (void)unlink(block);
   free(dir);
 }
 
@@ -338,6 +365,7 @@ int main(int argc, char **argv) {
   RUN_TEST(create_keytab_file_existing_file_is_rejected);
   RUN_TEST(create_keytab_file_unreadable_directory_rejected);
   RUN_TEST(create_keytab_file_existing_directory_rejected);
+  RUN_TEST(create_keytab_file_enotdir_rejected);
 
   result = TEST_EXECUTE();
   return result;

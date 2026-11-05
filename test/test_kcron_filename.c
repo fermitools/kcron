@@ -26,6 +26,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include "test_framework.h"
 
@@ -165,6 +167,55 @@ TEST(get_filenames_path_ends_with_filename) {
   TEST_ASSERT_EQ(strncmp(keytab + (path_len - name_len), keytab_filename, name_len), 0, "path must end with the keytab filename");
 }
 
+/*
+ * expect_exit - Fork, run @fn in the child, and report success in the parent.
+ * @fn: function to invoke that is expected to call exit() (never returns).
+ *
+ * get_client_dirname() and get_filenames() call exit() on their NULL-pointer
+ * guards. A forked child letting those functions exit would fail the test, so
+ * each guard runs in a grandchild whose non-zero termination is captured here.
+ */
+static void expect_exit(void (*fn)(void)) {
+  pid_t pid = fork();
+  if (pid == 0) {
+    fn();
+    /* Unreachable: every guarded path calls exit(). */
+    _exit(7);
+  }
+  int status = 0;
+  waitpid(pid, &status, 0);
+  TEST_ASSERT_NOT_EQ(status, 0, "the guarded helper must terminate via exit()");
+}
+
+static void thunks_client_dirname_null(void) {
+  const int rc = get_client_dirname(NULL);
+  (void)rc;
+}
+static void thunks_filenames_dir_null(void) {
+  char name[FILE_PATH_MAX_LENGTH];
+  const int rc = get_filenames(NULL, name, name);
+  (void)rc;
+}
+static void thunks_filenames_name_null(void) {
+  char dir[FILE_PATH_MAX_LENGTH];
+  const int rc = get_filenames(dir, NULL, NULL);
+  (void)rc;
+}
+static void thunks_filenames_path_null(void) {
+  char dir[FILE_PATH_MAX_LENGTH];
+  char name[FILE_PATH_MAX_LENGTH];
+  const int rc = get_filenames(dir, name, NULL);
+  (void)rc;
+}
+
+TEST(client_dirname_null_is_rejected) { expect_exit(thunks_client_dirname_null); }
+
+TEST(filenames_dir_null_is_rejected) { expect_exit(thunks_filenames_dir_null); }
+
+TEST(filenames_name_null_is_rejected) { expect_exit(thunks_filenames_name_null); }
+
+TEST(filenames_path_null_is_rejected) { expect_exit(thunks_filenames_path_null); }
+
 /* ============================================================================
  * Test Runner
  * ============================================================================
@@ -185,6 +236,12 @@ int main(int argc, char **argv) {
   RUN_TEST(get_filenames_directory_under_config);
   RUN_TEST(get_filenames_reproducible);
   RUN_TEST(get_filenames_path_ends_with_filename);
+
+  /* get_client_dirname / get_filenames NULL guards (each exits on failure) */
+  RUN_TEST(client_dirname_null_is_rejected);
+  RUN_TEST(filenames_dir_null_is_rejected);
+  RUN_TEST(filenames_name_null_is_rejected);
+  RUN_TEST(filenames_path_null_is_rejected);
 
   result = TEST_EXECUTE();
   return result;

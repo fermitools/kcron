@@ -119,6 +119,31 @@ endif(HAVE_COVERAGE_TOOLS)
 
 
 # ============================================================================
+# test_create_empty_client_keytab
+# ============================================================================
+# Integration test: run the built create-empty-client-keytab binary and verify
+# it creates the per-UID keytab (and refuses to clobber it on a second run).
+# This binary performs no hardening in its own code path, so instrumenting and
+# running it captures create-empty-client-keytab.c main() in the report the
+# same way client-keytab-name is captured above.
+
+add_executable(test_create_empty_client_keytab test_create_empty_client_keytab.c)
+
+target_include_directories(test_create_empty_client_keytab PRIVATE ${TEST_INCLUDES})
+target_compile_definitions(test_create_empty_client_keytab PRIVATE
+                           "CLIENT_EMPTY_CLIENT_KEYTAB_BIN=\"$<TARGET_FILE:create-empty-client-keytab>\"")
+add_coverage_flags(test_create_empty_client_keytab)
+
+add_test(NAME test_create_empty_client_keytab COMMAND test_create_empty_client_keytab)
+
+# Instrument the create-empty-client-keytab binary itself so its main() and the
+# path/validation helpers it calls are captured by the coverage report.
+if(HAVE_COVERAGE_TOOLS)
+  add_coverage_flags(create-empty-client-keytab)
+endif(HAVE_COVERAGE_TOOLS)
+
+
+# ============================================================================
 # test_kcron_caps
 # ============================================================================
 # Tests the libcap(3) helpers from kcron_caps.h: disable_capabilities(),
@@ -217,12 +242,16 @@ set(UNIT_TEST_BINARIES $<TARGET_FILE:test_kcron_filename>
                        $<TARGET_FILE:test_kcron_keytab>
                        $<TARGET_FILE:test_kcron_caps>
                        $<TARGET_FILE:test_kcron_keytab_file>
-                       $<TARGET_FILE:test_client_keytab_name>)
+                       $<TARGET_FILE:test_client_keytab_name>
+                       $<TARGET_FILE:test_create_empty_client_keytab>
+                       $<TARGET_FILE:create-empty-client-keytab>)
 
 add_custom_target(test_binaries DEPENDS test_kcron_filename test_kcron_keytab
                                             test_kcron_caps
                                             test_kcron_keytab_file
                                             test_client_keytab_name
+                                            test_create_empty_client_keytab
+                                            create-empty-client-keytab
   COMMENT "Building every unit test binary")
 
 if(BUILD_TESTING AND HAVE_COVERAGE_TOOLS)
