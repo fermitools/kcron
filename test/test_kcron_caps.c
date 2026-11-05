@@ -55,9 +55,9 @@ static void thunks_valid(void) {
  * ============================================================================ */
 
 TEST(disable_capabilities_clears_set) {
-    /* Returns void and exits only on failure; reaching here means success. */
-    disable_capabilities();
-    TEST_ASSERT_EQ(1, 1, "disable_capabilities must clear the capability set");
+  /* Returns void and exits only on failure; reaching here means success. */
+  disable_capabilities();
+  TEST_ASSERT_EQ(1, 1, "disable_capabilities must clear the capability set");
 }
 
 /* ============================================================================
@@ -65,24 +65,24 @@ TEST(disable_capabilities_clears_set) {
  * ============================================================================ */
 
 TEST(print_cap_error_reports_capabilities) {
-    /*
-     * With valid pointers this prints the capability name derived from
-     * cap_to_name(3) and returns; it never exits on the happy path.
-     */
-    print_cap_error("EFFECTIVE", SAMPLE_CAPS, 1);
-    TEST_ASSERT_EQ(1, 1, "print_cap_error must format and return");
+  /*
+   * With valid pointers this prints the capability name derived from
+   * cap_to_name(3) and returns; it never exits on the happy path.
+   */
+  print_cap_error("EFFECTIVE", SAMPLE_CAPS, 1);
+  TEST_ASSERT_EQ(1, 1, "print_cap_error must format and return");
 }
 
 TEST(print_cap_error_null_mode_is_safe) {
-    /* The NULL mode guard returns without printing. */
-    print_cap_error(NULL, SAMPLE_CAPS, 1);
-    TEST_ASSERT_EQ(1, 1, "print_cap_error must tolerate NULL mode");
+  /* The NULL mode guard returns without printing. */
+  print_cap_error(NULL, SAMPLE_CAPS, 1);
+  TEST_ASSERT_EQ(1, 1, "print_cap_error must tolerate NULL mode");
 }
 
 TEST(print_cap_error_null_array_is_safe) {
-    /* The NULL array guard returns without printing. */
-    print_cap_error("EFFECTIVE", NULL, 1);
-    TEST_ASSERT_EQ(1, 1, "print_cap_error must tolerate NULL array");
+  /* The NULL array guard returns without printing. */
+  print_cap_error("EFFECTIVE", NULL, 1);
+  TEST_ASSERT_EQ(1, 1, "print_cap_error must tolerate NULL array");
 }
 
 /* ============================================================================
@@ -97,34 +97,34 @@ TEST(print_cap_error_null_array_is_safe) {
  * keeping the parent fully able to continue and _exit(0) cleanly.
  */
 static void expect_exit(void (*fn)(void)) {
-    pid_t pid = fork();
-    if (pid == 0) {
-        fn();
-        /* Unreachable: every enable_capabilities path calls exit(). */
-        _exit(7);
-    }
-    int status = 0;
-    waitpid(pid, &status, 0);
-    (void)status;
+  pid_t pid = fork();
+  if (pid == 0) {
+    fn();
+    /* Unreachable: every enable_capabilities path calls exit(). */
+    _exit(7);
+  }
+  int status = 0;
+  waitpid(pid, &status, 0);
+  (void)status;
 }
 
 TEST(enable_capabilities_null_array_exits) {
-    /* The NULL-array guard calls exit(EXIT_FAILURE). */
-    expect_exit(thunks_null);
+  /* The NULL-array guard calls exit(EXIT_FAILURE). */
+  expect_exit(thunks_null);
 }
 
 TEST(enable_capabilities_zero_count_exits) {
-    /* The num_caps <= 0 guard calls exit(EXIT_FAILURE). */
-    expect_exit(thunks_zero);
+  /* The num_caps <= 0 guard calls exit(EXIT_FAILURE). */
+  expect_exit(thunks_zero);
 }
 
 TEST(enable_capabilities_privilege_required) {
-    /*
-     * With a valid array the function raises the permitted/effective sets but
-     * cap_set_proc(3) fails for an unprivileged process, so it exits via
-     * print_cap_error("APPLY"). Confirms the documented non-return-on-failure.
-     */
-    expect_exit(thunks_valid);
+  /*
+   * With a valid array the function raises the permitted/effective sets but
+   * cap_set_proc(3) fails for an unprivileged process, so it exits via
+   * print_cap_error("APPLY"). Confirms the documented non-return-on-failure.
+   */
+  expect_exit(thunks_valid);
 }
 
 /* ============================================================================
@@ -132,21 +132,21 @@ TEST(enable_capabilities_privilege_required) {
  * ============================================================================ */
 
 int main(int argc, char **argv) {
-    int result;
+  int result;
 
-    TEST_INIT(10, false, false); /* timeout, verbose, duration */
+  TEST_INIT(10, false, false); /* timeout, verbose, duration */
 
-    /* disable_capabilities */
-    RUN_TEST(disable_capabilities_clears_set);
-    /* print_cap_error */
-    RUN_TEST(print_cap_error_reports_capabilities);
-    RUN_TEST(print_cap_error_null_mode_is_safe);
-    RUN_TEST(print_cap_error_null_array_is_safe);
-    /* enable_capabilities */
-    RUN_TEST(enable_capabilities_null_array_exits);
-    RUN_TEST(enable_capabilities_zero_count_exits);
-    RUN_TEST(enable_capabilities_privilege_required);
+  /* disable_capabilities */
+  RUN_TEST(disable_capabilities_clears_set);
+  /* print_cap_error */
+  RUN_TEST(print_cap_error_reports_capabilities);
+  RUN_TEST(print_cap_error_null_mode_is_safe);
+  RUN_TEST(print_cap_error_null_array_is_safe);
+  /* enable_capabilities */
+  RUN_TEST(enable_capabilities_null_array_exits);
+  RUN_TEST(enable_capabilities_zero_count_exits);
+  RUN_TEST(enable_capabilities_privilege_required);
 
-    result = TEST_EXECUTE();
-    return result;
+  result = TEST_EXECUTE();
+  return result;
 }

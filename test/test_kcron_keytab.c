@@ -76,8 +76,7 @@ TEST(write_empty_keytab_writes_exact_magic) {
     return;
   }
 
-  TEST_ASSERT_EQ(write_empty_keytab(filedescriptor), 0,
-                 "expected successful write of magic bytes");
+  TEST_ASSERT_EQ(write_empty_keytab(filedescriptor), 0, "expected successful write of magic bytes");
 
   (void)lseek(filedescriptor, 0, SEEK_SET);
   nread = read(filedescriptor, readback, sizeof(readback));
@@ -85,10 +84,8 @@ TEST(write_empty_keytab_writes_exact_magic) {
 
   TEST_ASSERT_EQ(nread, 2, "must read exactly the two magic bytes");
   if (nread == 2) {
-    TEST_ASSERT_EQ((int)readback[0], (int)EXPECTED_MAGIC[0],
-                   "first magic byte must be the version (0x05)");
-    TEST_ASSERT_EQ((int)readback[1], (int)EXPECTED_MAGIC[1],
-                   "second magic byte must be the format (0x02)");
+    TEST_ASSERT_EQ((int)readback[0], (int)EXPECTED_MAGIC[0], "first magic byte must be the version (0x05)");
+    TEST_ASSERT_EQ((int)readback[1], (int)EXPECTED_MAGIC[1], "second magic byte must be the format (0x02)");
   }
 }
 

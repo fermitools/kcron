@@ -35,8 +35,7 @@
  * Recomputes what get_filenames() should produce using getuid() plus the same
  * string pieces, so the test does not hardcode the UID or the base directory.
  */
-static int compute_expected(char *keytab_dir, char *keytab_filename,
-                            char *keytab) {
+static int compute_expected(char *keytab_dir, char *keytab_filename, char *keytab) {
   char uid_str[32]; /* 64-bit unsigned IDs fit in 21 characters */
 
   if (snprintf(uid_str, sizeof(uid_str), "%u", (unsigned)getuid()) < 0) {
@@ -46,12 +45,10 @@ static int compute_expected(char *keytab_dir, char *keytab_filename,
   if (snprintf(keytab_filename, FILE_PATH_MAX_LENGTH, "client.keytab") < 0) {
     return -1;
   }
-  if (snprintf(keytab_dir, FILE_PATH_MAX_LENGTH, "%s/%s", __CLIENT_KEYTAB_DIR,
-               uid_str) < 0) {
+  if (snprintf(keytab_dir, FILE_PATH_MAX_LENGTH, "%s/%s", __CLIENT_KEYTAB_DIR, uid_str) < 0) {
     return -1;
   }
-  if (snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s", keytab_dir,
-               keytab_filename) < 0) {
+  if (snprintf(keytab, FILE_PATH_MAX_LENGTH, "%s/%s", keytab_dir, keytab_filename) < 0) {
     return -1;
   }
   return 0;
@@ -67,8 +64,7 @@ TEST(client_dirname_matches_config) {
 
   (void)memset(buf, 0, sizeof(buf));
   TEST_ASSERT_EQ(get_client_dirname(buf), 0, "expected success");
-  TEST_ASSERT_STR_EQ(buf, __CLIENT_KEYTAB_DIR,
-                     "must equal the compiled-in client keytab directory");
+  TEST_ASSERT_STR_EQ(buf, __CLIENT_KEYTAB_DIR, "must equal the compiled-in client keytab directory");
 }
 
 TEST(client_dirname_buffer_has_null_terminator) {
@@ -96,8 +92,7 @@ TEST(get_filenames_succeeds) {
   (void)memset(keytab_dir, 0, sizeof(keytab_dir));
   (void)memset(keytab_filename, 0, sizeof(keytab_filename));
   (void)memset(keytab, 0, sizeof(keytab));
-  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0,
-                 "expected success");
+  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0, "expected success");
 }
 
 TEST(get_filenames_filename_is_constant) {
@@ -108,10 +103,8 @@ TEST(get_filenames_filename_is_constant) {
   (void)memset(keytab_dir, 0, sizeof(keytab_dir));
   (void)memset(keytab_filename, 0, sizeof(keytab_filename));
   (void)memset(keytab, 0, sizeof(keytab));
-  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0,
-                 "expected success");
-  TEST_ASSERT_STR_EQ(keytab_filename, "client.keytab",
-                     "filename must always be client.keytab");
+  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0, "expected success");
+  TEST_ASSERT_STR_EQ(keytab_filename, "client.keytab", "filename must always be client.keytab");
 }
 
 TEST(get_filenames_directory_under_config) {
@@ -123,17 +116,12 @@ TEST(get_filenames_directory_under_config) {
   (void)memset(keytab_dir, 0, sizeof(keytab_dir));
   (void)memset(keytab_filename, 0, sizeof(keytab_filename));
   (void)memset(keytab, 0, sizeof(keytab));
-  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0,
-                 "expected success");
+  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0, "expected success");
 
   dir_len = strlen(keytab_dir);
-  TEST_ASSERT_EQ(dir_len > strlen(__CLIENT_KEYTAB_DIR), 1,
-                 "directory must be nested below the configured base");
-  TEST_ASSERT_EQ(strncmp(keytab_dir, __CLIENT_KEYTAB_DIR,
-                         strlen(__CLIENT_KEYTAB_DIR)), 0,
-                 "directory must start with the configured base");
-  TEST_ASSERT_EQ((int)keytab_dir[strlen(__CLIENT_KEYTAB_DIR)], (int)'/',
-                 "base must be followed by a path separator");
+  TEST_ASSERT_EQ(dir_len > strlen(__CLIENT_KEYTAB_DIR), 1, "directory must be nested below the configured base");
+  TEST_ASSERT_EQ(strncmp(keytab_dir, __CLIENT_KEYTAB_DIR, strlen(__CLIENT_KEYTAB_DIR)), 0, "directory must start with the configured base");
+  TEST_ASSERT_EQ((int)keytab_dir[strlen(__CLIENT_KEYTAB_DIR)], (int)'/', "base must be followed by a path separator");
 }
 
 TEST(get_filenames_reproducible) {
@@ -151,17 +139,12 @@ TEST(get_filenames_reproducible) {
   (void)memset(exp_name, 0, sizeof(exp_name));
   (void)memset(exp_path, 0, sizeof(exp_path));
 
-  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0,
-                 "get_filenames must succeed");
-  TEST_ASSERT_EQ(compute_expected(exp_dir, exp_name, exp_path), 0,
-                 "compute_expected must succeed");
+  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0, "get_filenames must succeed");
+  TEST_ASSERT_EQ(compute_expected(exp_dir, exp_name, exp_path), 0, "compute_expected must succeed");
 
-  TEST_ASSERT_STR_EQ(keytab_dir, exp_dir,
-                     "computed directory must match independent computation");
-  TEST_ASSERT_STR_EQ(keytab_filename, exp_name,
-                     "computed filename must match independent computation");
-  TEST_ASSERT_STR_EQ(keytab, exp_path,
-                     "computed path must match independent computation");
+  TEST_ASSERT_STR_EQ(keytab_dir, exp_dir, "computed directory must match independent computation");
+  TEST_ASSERT_STR_EQ(keytab_filename, exp_name, "computed filename must match independent computation");
+  TEST_ASSERT_STR_EQ(keytab, exp_path, "computed path must match independent computation");
 }
 
 TEST(get_filenames_path_ends_with_filename) {
@@ -174,16 +157,12 @@ TEST(get_filenames_path_ends_with_filename) {
   (void)memset(keytab_dir, 0, sizeof(keytab_dir));
   (void)memset(keytab_filename, 0, sizeof(keytab_filename));
   (void)memset(keytab, 0, sizeof(keytab));
-  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0,
-                 "expected success");
+  TEST_ASSERT_EQ(get_filenames(keytab_dir, keytab_filename, keytab), 0, "expected success");
 
   path_len = strlen(keytab);
   name_len = strlen(keytab_filename);
-  TEST_ASSERT_EQ((int)(path_len >= name_len), 1,
-                 "path must be at least as long as filename");
-  TEST_ASSERT_EQ(strncmp(keytab + (path_len - name_len), keytab_filename,
-                         name_len), 0,
-                 "path must end with the keytab filename");
+  TEST_ASSERT_EQ((int)(path_len >= name_len), 1, "path must be at least as long as filename");
+  TEST_ASSERT_EQ(strncmp(keytab + (path_len - name_len), keytab_filename, name_len), 0, "path must end with the keytab filename");
 }
 
 /* ============================================================================
