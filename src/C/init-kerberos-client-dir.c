@@ -58,6 +58,7 @@
 
 #include "kcron_caps.h"
 #include "kcron_filename.h"
+#include "kcron_keytab_file.h"
 #include "kcron_setup.h"
 
 #ifndef _0600
@@ -179,35 +180,6 @@ static int mkdir_if_missing(const char *dir, uid_t owner, gid_t group, mode_t mo
   disable_capabilities();
 
   (void)closedir(my_dir);
-  return 0;
-}
-
-static int validate_client_dirname(char *client_keytab_dirname) __attribute__((warn_unused_result));
-static int validate_client_dirname(char *client_keytab_dirname) {
-  struct stat lst = {0};
-  struct stat st = {0};
-
-  if (client_keytab_dirname == NULL) {
-    (void)fprintf(stderr, "%s: Client keytab directory pointer is NULL.\n", __PROGRAM_NAME);
-    return 1;
-  }
-
-  /* Check symlink on client_keytab_dirname before stat */
-  if (lstat(client_keytab_dirname, &lst) != 0) {
-    (void)fprintf(stderr, "%s: Client keytab directory does not exist: %s.\n", __PROGRAM_NAME, client_keytab_dirname);
-    (void)fprintf(stderr, "%s: Contact your admin to have it created correctly.\n", __PROGRAM_NAME);
-    return 1;
-  }
-  if (S_ISLNK(lst.st_mode)) {
-    (void)fprintf(stderr, "%s: Client keytab directory %s is a symlink, not allowed.\n", __PROGRAM_NAME, client_keytab_dirname);
-    return 1;
-  }
-
-  if (stat(client_keytab_dirname, &st) == -1) {
-    (void)fprintf(stderr, "%s: Client keytab directory does not exist: %s.\n", __PROGRAM_NAME, client_keytab_dirname);
-    (void)fprintf(stderr, "%s: Contact your admin to have it created.\n", __PROGRAM_NAME);
-    return 1;
-  }
   return 0;
 }
 

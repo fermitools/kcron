@@ -5,6 +5,11 @@ project(kcron C)
 
 set(LANGUAGES "C")
 
+################################
+# Testing (CTest)
+enable_testing()
+include(CTest)
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
         "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE
@@ -53,6 +58,7 @@ endif(EXISTS "${LOC_PATH}")
 include(doc/CMakeLists.txt)
 include(src/C/CMakeLists.txt)
 include(src/shell/CMakeLists.txt)
+add_subdirectory(test)
 
 ####
 # Print out feature summary

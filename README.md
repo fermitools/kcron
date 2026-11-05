@@ -65,4 +65,48 @@ You may change the `/var/kerberos/krb5/user/` to an alternate location at build 
 
 The `Makefile` is not setting CAPIBILITIES on the binary.  This is by design.
 
+## Testing
+
+Tests are managed by CTest. Run the full suite after configuring:
+
+```bash
+mkdir build && cd build
+cmake ..
+make test          # builds and runs every test via ctest
+# or:
+ctest --output-on-failure
+```
+
+The suite (see `test/`) covers the areas requested in issues [#2] and [#9]:
+
+  * **C unit tests** (`test_kcron_filename`, `test_kcron_keytab`,
+    `test_client_keytab_name`) use the minimal TAP 14 test framework ported from
+    `fermitools/fnal-vncpasswd`. Each test runs in its own process so a
+    failing assertion cannot corrupt the others.
+  * **Shell syntax** (`bash -n`) for `kcroninit`, `kcrondestroy`, and
+    `kcron.sysconfig`.
+  * **Sysconfig derivation** (`test_sysconfig.sh`) validates that
+    `REALM` / `WHOAMI` / `FULLPRINCIPAL` are derived as documented, offline.
+  * **Shell suite** via `bats` (`test/kcron.bats`) exercises the kcron shell
+    utilities' control flow with every Kerberos tooling command stubbed, so the
+    tests need no KDC (skipped automatically if `bats` is unavailable).
+  * **Static analysis** via `shellcheck` (skipped automatically if unavailable).
+  * **Hardening check** via `checksec` or `hardening-check` against the built
+    binaries (ported from the RPM spec `%check`, and skipped automatically if
+    neither auditor is installed).
+
+When `lcov` and `genhtml` are present, a coverage report can be generated:
+
+```bash
+make coverage        # writes coverage/index.html and prints a summary
+```
+
+All optional tools degrade gracefully: if `bats`/`checksec`/`hardening-check`/
+`shellcheck`/`lcov` are not installed on the toolchain, the corresponding tests
+are registered only when the tool is available (or pass as a no-op) so that
+minimal builds still configure and pass.
+
+[#2]: https://github.com/fermitools/kcron/issues/2
+[#9]: https://github.com/fermitools/kcron/issues/9
+
 See the [documentation](https://github.com/fermitools/kcron/tree/main/doc) folder for more information.

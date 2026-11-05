@@ -6,8 +6,9 @@ include(GNUInstallDirs)
 install(FILES ${PROJECT_SOURCE_DIR}/src/shell/kcron.sysconfig DESTINATION ${CMAKE_INSTALL_FULL_SYSCONFDIR}/sysconfig RENAME kcron)
 install(FILES ${PROJECT_SOURCE_DIR}/src/shell/kcrondestroy ${PROJECT_SOURCE_DIR}/src/shell/kcroninit DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-enable_testing()
-
-add_test(NAME Syntax:Config COMMAND bash -n ${PROJECT_SOURCE_DIR}/src/shell/kcron.sysconfig)
-add_test(NAME Syntax:Init COMMAND bash -n ${PROJECT_SOURCE_DIR}/src/shell/kcroninit)
-add_test(NAME Syntax:Destroy COMMAND bash -n ${PROJECT_SOURCE_DIR}/src/shell/kcrondestroy)
+#
+# All CTest registrations for the shell utilities (syntax checks, sourcing,
+# hardening, shellcheck) live in the test tree: ${PROJECT_SOURCE_DIR}/test/.
+# This file therefore owns only build and install directives, matching the
+# separation used across the rest of the project.
+#
