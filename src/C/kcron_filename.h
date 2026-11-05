@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MIT */
 /*
  *
  * Filename and path handling functions for kcron keytabs

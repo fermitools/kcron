@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MIT */
 /*
  *
  * A simple program that prints the path to the user's client keytab file.

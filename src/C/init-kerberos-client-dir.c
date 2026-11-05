@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MIT */
 /*
  *
  * A simple program that generates a blank keytab in a deterministic location.

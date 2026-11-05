@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MIT */
 /*
  *
  * A simple place where we keep our CAPABILITIES(7) calls
