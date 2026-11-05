@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "test_framework.h"
@@ -114,6 +115,51 @@ TEST(write_empty_keytab_writes_only_two_bytes) {
   TEST_ASSERT_EQ(nread, 2, "file must contain exactly two bytes");
 }
 
+/*
+ * write_empty_keytab() rejects a non-positive or stdio file descriptor before
+ * writing anything. Those guards call exit(), so each is exercised in a
+ * grandchild whose non-zero termination is captured here rather than allowed to
+ * fail the enclosing test.
+ *
+ * Note: the descriptor is validated before any write, so passing fd 0/1/2 never
+ * touches the inherited /dev/null-backed stdout/stderr.
+ */
+static void expect_exit_write(void (*fn)(void)) {
+  pid_t pid = fork();
+  if (pid == 0) {
+    fn();
+    _exit(7);
+  }
+  int status = 0;
+  waitpid(pid, &status, 0);
+  TEST_ASSERT_NOT_EQ(status, 0, "write_empty_keytab must reject the descriptor");
+}
+
+static void guard_neg(void) {
+  const int rc = write_empty_keytab(-1);
+  (void)rc;
+}
+static void guard_stdin(void) {
+  const int rc = write_empty_keytab(0);
+  (void)rc;
+}
+static void guard_stdout(void) {
+  const int rc = write_empty_keytab(1);
+  (void)rc;
+}
+static void guard_stderr(void) {
+  const int rc = write_empty_keytab(2);
+  (void)rc;
+}
+
+TEST(write_empty_keytab_neg_descriptor_rejected) { expect_exit_write(guard_neg); }
+
+TEST(write_empty_keytab_stdin_descriptor_rejected) { expect_exit_write(guard_stdin); }
+
+TEST(write_empty_keytab_stdout_descriptor_rejected) { expect_exit_write(guard_stdout); }
+
+TEST(write_empty_keytab_stderr_descriptor_rejected) { expect_exit_write(guard_stderr); }
+
 /* ============================================================================
  * Test Runner
  * ============================================================================
@@ -127,6 +173,12 @@ int main(int argc, char **argv) {
   /* write_empty_keytab */
   RUN_TEST(write_empty_keytab_writes_exact_magic);
   RUN_TEST(write_empty_keytab_writes_only_two_bytes);
+
+  /* write_empty_keytab descriptor guards (each exits on failure) */
+  RUN_TEST(write_empty_keytab_neg_descriptor_rejected);
+  RUN_TEST(write_empty_keytab_stdin_descriptor_rejected);
+  RUN_TEST(write_empty_keytab_stdout_descriptor_rejected);
+  RUN_TEST(write_empty_keytab_stderr_descriptor_rejected);
 
   result = TEST_EXECUTE();
   return result;
