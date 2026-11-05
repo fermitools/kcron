@@ -36,6 +36,8 @@ BuildRequires:	kernel-devel
 BuildRequires:	cmake >= 3.14
 BuildRequires:  redhat-rpm-config coreutils bash gcc
 BuildRequires:	libcap libcap-devel
+BuildRequires:	bats
+BuildRequires:	shellcheck
 
 
 %if 0%{?rhel} < 10
@@ -101,30 +103,13 @@ make install DESTDIR=%{buildroot}
 
 
 %check
-for code in $(ls %{buildroot}%{_bindir}); do
-    bash -n %{buildroot}%{_bindir}/${code}
-    if [[ $? -ne 0 ]]; then
-      exit 1
-    fi
-done
-bash -n %{buildroot}%{_sysconfdir}/sysconfig/kcron
-if [[ $? -ne 0 ]]; then
-  exit 1
-fi
-
-%if %{_hardened_build}
-for code in $(ls %{buildroot}%{_libexecdir}/kcron); do
-    checksec --file=%{buildroot}%{_libexecdir}/kcron/${code}
-    if [[ $? -ne 0 ]]; then
-      exit 1
-    fi
-
-    checksec --fortify-file=%{buildroot}%{_libexecdir}/kcron/${code}
-    if [[ $? -ne 0 ]]; then
-      exit 1
-    fi
-done
+%if 0%{?rhel} < 9 && 0%{?fedora} < 31
+cd build
+ctest --output-on-failure
+%else
+%ctest --output-on-failure
 %endif
+
 
 %post
 %{__mkdir_p} --mode=0755 %{_localstatedir}/kerberos/krb5/user

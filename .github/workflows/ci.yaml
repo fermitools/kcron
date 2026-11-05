@@ -1,4 +1,4 @@
-name: Run CI
+name: Build and Test
 permissions:
   contents: read
   pull-requests: read
@@ -13,7 +13,7 @@ on:
       - main
 
 jobs:
-  compile:
+  build-test:
     runs-on: ubuntu-latest
     container:
       image: fedora:latest
@@ -21,12 +21,7 @@ jobs:
     name: Test compile
 
     steps:
-      - name: checkout code tree
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: install dependencies
+      - name: Install build dependencies
         run: |
           dnf -y update
           dnf -y install \
@@ -36,12 +31,34 @@ jobs:
             cmake \
             libcap-devel \
             libseccomp-devel \
-            asciidoc
+            asciidoc \
+            checksec \
+            shellcheck \
+            bats \
+            hostname \
+            lcov
 
-      - name: run build
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure
         run: |
-          mkdir build
+          cmake -B build -S . -Wdev -Wdeprecated \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DUSE_SECCOMP=ON \
+            -DUSE_LANDLOCK=ON
+
+      - name: Build
+        run: |
+          export LDFLAGS="-Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,-z,combreloc"
+          cmake --build build --parallel --verbose
+
+      - name: Test
+        run: |
           cd build
-          cmake ..
-          cmake --build . --verbose
-          ctest --output-on-failure
+          ctest --output-on-failure --verbose
+
+      - name: Coverage
+        run: make -C build coverage

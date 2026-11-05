@@ -1,6 +1,10 @@
 #!/bin/bash -u
 # SPDX-License-Identifier: MIT
 
+# shellcheck source=/dev/null disable=SC1090
+# The source lines below load site/host configuration supplied by the
+# administrator; ShellCheck cannot follow those non-constant paths.
+
 ###########################################################
 if [[ -r /etc/sysconfig/kcron ]]; then
     source /etc/sysconfig/kcron
@@ -191,7 +195,7 @@ if [[ ! -w ${KEYTAB} ]]; then
     echo ''
     echo 'Keytab is not writable to this user:' >&2
     id >&2
-    ls -l ${KEYTAB} >&2
+    ls -l "${KEYTAB}" >&2
     exit 2
 fi
 

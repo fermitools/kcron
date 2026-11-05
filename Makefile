@@ -7,7 +7,7 @@ _default:
 sources:
 	@echo "You found my koji hook"
 	@mkdir kcron
-	@cp -r doc src CMakeLists.txt LICENSE README.md kcron
+	@cp -r doc src test CMakeLists.txt LICENSE README.md kcron
 	tar cf - kcron | gzip --best > $(current_dir)/kcron.tar.gz
 	rm -rf kcron
 srpm: sources
